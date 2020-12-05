@@ -28,12 +28,11 @@ gravitational constant): `F = G (m1 * m2) / r^2`
 
 Barnes-Hut Approximation
 ------------------------
-
 The Barnes-Hut Approximation seeks to cut down computation by grouping very
 distant masses together into one larger mass. The first step is to divide up the
 `n` bodies into a quadtree (for 2D simulations) to group together nearby masses.
 Then, for each body in the tree, we calculate the contribution of other bodies
-in the same way as the na¨ıve algorithm. However, if a group of bodies is
+in the same way as the naive algorithm. However, if a group of bodies is
 sufficiently far away, we aggregate them and use their combined mass and center
 of gravity for our computation. By leveraging this approximation, the
 algorithm’s time complexity improves to `O(n log n)`. Whether a region is
@@ -41,3 +40,8 @@ considered "distant" or not depends on the ratio of its size to its distance
 from the body. If this ratio exceeds a threshold value, the region is
 approximated as above. This threshold value can be adjusted depending on desired
 speed or accuracy of the simulation.
+
+Authors
+=======
+Hans Montero \<hjm2133@columbia.edu\>  
+Rhys Murrary \<ram2269@columbia.edu\>
