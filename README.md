@@ -44,4 +44,4 @@ speed or accuracy of the simulation.
 Authors
 =======
 Hans Montero \<hjm2133@columbia.edu\>  
-Rhys Murrary \<ram2269@columbia.edu\>
+Rhys Murray \<ram2269@columbia.edu\>
