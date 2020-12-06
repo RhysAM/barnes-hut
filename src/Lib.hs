@@ -1,5 +1,8 @@
 module Lib where
 
+thetaThreshold = 0
+g = 1
+
 someFunc :: IO ()
 someFunc = putStrLn "someFunc"
 
@@ -113,5 +116,24 @@ instance Show QuadTree where
      show (QuadNode b qi) = show b ++ " " ++ show qi
      show qt = traversePrint qt 0
 
+approximateForce :: QuadTree -> Body -> Body -- Run Barnes Hut
+approximateForce (QuadNode Nothing qi) b = b -- nothing to compute
+approximateForce (QuadNode (Just b1) qi ) b = b {xVel = xVel b +  xVelChange, yVel = yVel b + yVelChange}
+          where xDiff = xCord b - xCord b1
+                yDiff = yCord b - yCord b1
+                distance = xDiff * xDiff + yDiff * yDiff
+                angleToBody = atan2 yDiff xDiff
+                xVelChange = g * cos(angleToBody) * (mass b * mass b1 / distance)
+                yVelChange = g * sin(angleToBody) * (mass b * mass b1 / distance)
 
-
+approximateForce (QuadTree nw ne sw se qi) b
+  | theta < thetaThreshold = b {xVel = xVel b + xVelChange, yVel = yVel b + yVelChange} -- Treat this quadrant as a single mass
+  | otherwise = approximateForce nw $ approximateForce ne $ approximateForce sw $ approximateForce se b
+  where xDiff = xCord b - (cx . com) qi
+        yDiff = yCord b - (cy . com) qi
+        distance = xDiff * xDiff + yDiff * yDiff
+        s = xl qi - xr qi
+        theta = s / (sqrt distance)
+        angleToBody = atan2 yDiff xDiff
+        xVelChange = g * cos(angleToBody) * (mass b * (cMass . com) qi / distance)
+        yVelChange = g * sin(angleToBody) * (mass b * (cMass . com) qi / distance)
