@@ -13,17 +13,23 @@ data Body = Body {  mass :: Double
 data CenterMass = CenterMass {  cMass :: Double
                              ,  cx :: Double
                              ,  cy :: Double
-                             } deriving Show
+                             }
+
+instance Show CenterMass where
+    show (CenterMass ma xx yy) = "COM " ++ (show ma) ++ " @ " ++ "(" ++ (show xx) ++ ", " ++ (show yy) ++ ")"
 
 data QuadInfo = QuadInfo {  xl :: Double
                          ,  xr :: Double
                          ,  yb :: Double
                          ,  yt :: Double
                          ,  com :: CenterMass
-                         } deriving Show
+                         }
+
+instance Show QuadInfo where
+    show (QuadInfo xxl xxr yyb yyt com') = "QI[ X:" ++ (show xxl) ++ "-" ++ (show xxr) ++ ", Y:" ++ (show yyb) ++ "-" ++ (show yyt) ++ ", "++ (show com') ++ "]"
 
 instance Show Body where
-    show (Body m x y xVel yVel) = "body @ (" ++ (show x) ++ ", " ++ (show y) ++ ") -> mass: " ++ show m ++ ", xVel: " ++ (show xVel) ++ ", yVel: " ++ (show yVel)
+    show (Body m x y xVel yVel) = "body @ (" ++ (show x) ++ ", " ++ (show y) ++ ") -> mass: " ++ show m ++ ", vel: (" ++ (show xVel) ++ ", " ++ (show yVel) ++ ")"
 
 data QuadTree = QuadTree QuadTree QuadTree QuadTree QuadTree QuadInfo
               | QuadNode (Maybe Body) QuadInfo
@@ -95,7 +101,12 @@ inQuad qt b = xl qi <= x && xr qi >= x && yt qi >= y && yb qi <= y
 
 traversePrint :: QuadTree -> Int -> String
 traversePrint n@(QuadNode b qi) lvl = "\\_ " ++ show n
-traversePrint (QuadTree nw ne sw se qi) lvl = replicate lvl '-' ++ show qi ++ "\n" ++ replicate lvl '-' ++ traversePrint nw (lvl + 1) ++ "\n" ++ replicate lvl '-' ++ traversePrint ne (lvl + 1) ++ "\n" ++ replicate lvl '-' ++ traversePrint sw (lvl + 1) ++ "\n" ++ replicate lvl '-' ++ traversePrint se (lvl + 1)
+traversePrint (QuadTree nw ne sw se qi) lvl = prInfo ++ travNW ++ travNE ++ travSW ++ travSE 
+            where travNW = "\n" ++ replicate lvl '-' ++ traversePrint nw (lvl + 1)
+                  travNE = "\n" ++ replicate lvl '-' ++ traversePrint ne (lvl + 1)
+                  travSW = "\n" ++ replicate lvl '-' ++ traversePrint sw (lvl + 1)
+                  travSE = "\n" ++ replicate lvl '-' ++ traversePrint se (lvl + 1)
+                  prInfo = (if lvl /= 0 then "\\_ " else "") ++ show qi
 
 
 instance Show QuadTree where
