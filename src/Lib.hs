@@ -14,6 +14,9 @@ data Body = Body {  mass :: Double
                  ,  yVel :: Double
                  }
 
+instance Eq Body where
+  b1 == b2 = (xCord b1 == xCord b2) && (yCord b1 == yCord b2)
+
 data CenterMass = CenterMass {  cMass :: Double
                              ,  cx :: Double
                              ,  cy :: Double
@@ -37,6 +40,11 @@ instance Show Body where
 
 data QuadTree = QuadTree QuadTree QuadTree QuadTree QuadTree QuadInfo
               | QuadNode (Maybe Body) QuadInfo
+
+toList :: QuadTree -> [Body]
+toList (QuadNode Nothing qi) = []
+toList (QuadNode (Just b) qi) = [b]
+toList (QuadTree nw ne sw se qi) = toList nw ++ toList ne ++ toList sw ++ toList se
 
 getInfo :: QuadTree -> QuadInfo
 getInfo (QuadTree _ _ _ _ qi) = qi
@@ -120,26 +128,39 @@ instance Show QuadTree where
 approximateForce :: QuadTree -> Body -> Body -- Run Barnes Hut
 approximateForce (QuadNode Nothing qi) b = b -- nothing to compute
 approximateForce (QuadNode (Just b1) qi ) b
-  | (xDiff == 0) && (yDiff == 0) = b 
-  | otherwise = b {xVel = xVel b +  xVelChange, yVel = yVel b + yVelChange}
-          where xDiff = xCord b - xCord b1
-                yDiff = yCord b - yCord b1
-                distance = xDiff * xDiff + yDiff * yDiff
-                angleToBody = atan2 yDiff xDiff
-                xVelChange = g * cos(angleToBody) * (mass b * mass b1 / distance)
-                yVelChange = g * sin(angleToBody) * (mass b * mass b1 / distance)
+  | b == b1 = b 
+  | otherwise = updateVelocity b b1
 approximateForce (QuadTree nw ne sw se qi) b
-  | theta < thetaThreshold = b {xVel = xVel b + xVelChange, yVel = yVel b + yVelChange} -- Treat this quadrant as a single mass
+  | theta < thetaThreshold = updateVelocity b referenceMass-- Treat this quadrant as a single mass
   | otherwise = approximateForce nw $ approximateForce ne $ approximateForce sw $ approximateForce se b
   where xDiff = xCord b - (cx . com) qi
         yDiff = yCord b - (cy . com) qi
         distance = xDiff * xDiff + yDiff * yDiff
         s = xr qi - xl qi
         theta = s / (sqrt distance)
-        angleToBody = atan2 yDiff xDiff
-        xVelChange = g * cos angleToBody * (mass b * (cMass . com) qi / distance)
-        yVelChange = g * sin angleToBody * (mass b * (cMass . com) qi / distance)
+        referenceMass = Body ((cMass . com) qi) ((cx . com) qi) ((cy . com) qi) 0 0 -- Consider the COM a body for calculation
 
 doTimeStep :: Body -> Body
 doTimeStep b = b {xCord = xCord b + xVel b * timeStep, yCord = yCord b + yVel b * timeStep}
 
+updateVelocity :: Body -> Body -> Body
+updateVelocity bodyToUpdate otherBody 
+  | bodyToUpdate == otherBody = bodyToUpdate
+  | otherwise = bodyToUpdate {xVel = xVel bodyToUpdate +  xVelChange, yVel = yVel bodyToUpdate + yVelChange}
+  where xDiff = xCord bodyToUpdate - xCord otherBody
+        yDiff = yCord bodyToUpdate - yCord otherBody
+        distance = xDiff * xDiff + yDiff * yDiff
+        angleToBody = atan2 yDiff xDiff
+        xVelChange = g * cos(angleToBody) * (mass bodyToUpdate * mass otherBody / distance)
+        yVelChange = g * sin(angleToBody) * (mass bodyToUpdate * mass otherBody / distance)
+
+fromList :: [Body] -> QuadInfo -> QuadTree
+fromList bs qi = foldl (flip insert) empty bs where empty = emptyQTree (xl qi) (xr qi) (yb qi) (yt qi) 
+
+doLoop :: QuadTree -> Int -> QuadTree
+doLoop oldTree 0 = oldTree
+doLoop oldTree n = doLoop newTree (n - 1)
+  where oldbodyList = toList oldTree
+        updatedBodyList = map (approximateForce oldTree) oldbodyList
+        movedBodyList = map doTimeStep updatedBodyList
+        newTree = calculateCOM $ fromList movedBodyList (getInfo oldTree)
