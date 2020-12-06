@@ -154,8 +154,13 @@ updateVelocity bodyToUpdate otherBody
         xVelChange = g * cos(angleToBody) * (mass bodyToUpdate * mass otherBody / distance)
         yVelChange = g * sin(angleToBody) * (mass bodyToUpdate * mass otherBody / distance)
 
-fromList :: [Body] -> QuadInfo -> QuadTree
-fromList bs qi = foldl (flip insert) empty bs where empty = emptyQTree (xl qi) (xr qi) (yb qi) (yt qi) 
+fromList :: [Body] -> QuadTree
+fromList bs = foldl (flip insert) empty bs 
+    where empty = emptyQTree xl' xr' yb' yt' -- Dynamically calculate bounds of new Quadtree
+          xl' = foldr1 min $ map xCord bs
+          xr' = foldr1 max $ map xCord bs
+          yb' = foldr1 min $ map yCord bs
+          yt' = foldr1 max $ map yCord bs
 
 doLoop :: QuadTree -> Int -> QuadTree
 doLoop oldTree 0 = oldTree
@@ -163,4 +168,4 @@ doLoop oldTree n = doLoop newTree (n - 1)
   where oldbodyList = toList oldTree
         updatedBodyList = map (approximateForce oldTree) oldbodyList
         movedBodyList = map doTimeStep updatedBodyList
-        newTree = calculateCOM $ fromList movedBodyList (getInfo oldTree)
+        newTree = calculateCOM $ fromList movedBodyList
