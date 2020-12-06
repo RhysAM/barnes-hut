@@ -5,5 +5,5 @@ b2 = Body 5 8 8 100 100
 b3 = Body 5 9 9 100 100 
 filled = insert b3 $ insert  b2 $ b1 `insert` empty
 
-bodyList = [(Body 10 x x 100 100) | x <- [0..100]]
+bodyList = [(Body 500 1 x 100 100) | x <- [0..100]]
 bigTree = calculateCOM $ foldl (flip insert) empty bodyList
