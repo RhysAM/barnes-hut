@@ -12,45 +12,46 @@ data Body = Body {  mass :: Integer
 data CenterMass = CenterMass {  cMass :: Integer
                              ,  cx :: Integer
                              ,  cy :: Integer
-                             }
+                             } deriving Show
 
 data QuadInfo = QuadInfo {  xl :: Integer
                          ,  xr :: Integer
-                         ,  yt :: Integer
                          ,  yb :: Integer
+                         ,  yt :: Integer
                          ,  com :: CenterMass
-                         }
+                         } deriving Show
 
 instance Show Body where
     show (Body m x y vel) = "body @ (" ++ (show x) ++ ", " ++ (show y) ++ ") -> mass: " ++ show m ++ ", vel: " ++ (show vel)
 
 data QuadTree = QuadTree QuadTree QuadTree QuadTree QuadTree QuadInfo
               | QuadNode (Maybe Body) QuadInfo
+              deriving Show
 
 getInfo :: QuadTree -> QuadInfo
 getInfo (QuadTree _ _ _ _ qi) = qi
 getInfo (QuadNode _ qi) = qi
 
 emptyQNode :: Integer -> Integer -> Integer -> Integer -> QuadTree
-emptyQNode xl xr yt yb = QuadNode Nothing (QuadInfo xl xr yt yb (CenterMass 0 0 0))
+emptyQNode xl xr yb yt = QuadNode Nothing (QuadInfo xl xr yb yt (CenterMass 0 0 0))
 
 emptyQTree :: Integer -> Integer -> Integer -> Integer -> QuadTree
-emptyQTree xl xr yt yb = QuadTree nw ne sw se (QuadInfo xl xr yt yb (CenterMass 0 0 0))
-                        where xm = (xr - xl) `div` 2
-                              ym = (yt - yb) `div` 2
-                              nw = emptyQNode xl xm yt ym
-                              ne = emptyQNode xm xr yt ym
-                              sw = emptyQNode xl xm ym yb
-                              se = emptyQNode xm xr ym yb
+emptyQTree xl xr yb yt = QuadTree nw ne sw se (QuadInfo xl xr yb yt (CenterMass 0 0 0))
+                        where xm = (xr + xl) `div` 2
+                              ym = (yt + yb) `div` 2
+                              nw = emptyQNode xl xm ym yt
+                              ne = emptyQNode xm xr ym yt
+                              sw = emptyQNode xl xm yb ym
+                              se = emptyQNode xm xr yb ym
 
 insert :: Body -> QuadTree -> QuadTree
 insert b (QuadNode Nothing qi) = QuadNode (Just b) qi
-insert b2 (QuadNode (Just b1) qi) = insert b2 $ insert b1 $ emptyQTree (xl qi) (xr qi) (yt qi) (yb qi)
+insert b2 (QuadNode (Just b1) qi) = insert b2 $ insert b1 $ emptyQTree (xl qi) (xr qi) (yb qi) (yt qi)
 insert b (QuadTree nw ne sw se qi)
-  | inQuad nw b = insert b nw
-  | inQuad ne b = insert b ne
-  | inQuad sw b = insert b se
-  | inQuad se b = insert b sw
+  | inQuad nw b = QuadTree (insert b nw) ne sw se qi
+  | inQuad ne b = QuadTree nw (insert b ne) sw se qi
+  | inQuad sw b = QuadTree nw ne (insert b se) sw qi
+  | inQuad se b = QuadTree nw ne sw (insert b se) qi
   | otherwise = error "Couldn't find QuadTree to insert body"
 
 calculateCOM :: QuadTree -> QuadTree
@@ -61,7 +62,7 @@ calculateCOM (QuadTree nw ne sw se qi) = QuadTree nw ne sw se (qi {com = CenterM
                       nwMass = cMass nwCOM
                       nwX = cx nwCOM
                       nwY = cy nwCOM
-                      neCOM = com $ getInfo ne 
+                      neCOM = com $ getInfo ne
                       neMass = cMass neCOM
                       neX = cx neCOM
                       neY = cy neCOM
