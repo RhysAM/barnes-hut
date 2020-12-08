@@ -15,7 +15,7 @@ calcCOM qt@(QuadTree _ _ _ _ qi) = QuadTree nw' ne' sw' se' (qi {com = CenterMas
     where qs@[nw', ne', sw', se'] = mapQuads calcCOM qt
           totMass = foldr (\q tm -> tm + getCOMM q) 0 qs 
           newX = foldr (\q wx -> wx + getCOMM q * getCOMX q) 0 qs / totMass
-          newY = foldr (\q wx -> wx + getCOMM q * getCOMY q) 0 qs / totMass
+          newY = foldr (\q wy -> wy + getCOMM q * getCOMY q) 0 qs / totMass
                       
 approximateForce :: QuadTree -> Body -> Body -- Run Barnes Hut
 approximateForce (QuadNode Nothing qi) b = b -- nothing to compute
