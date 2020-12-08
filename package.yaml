@@ -1,10 +1,10 @@
 name:                barnes-hut
 version:             0.1.0.0
-github:              "githubuser/barnes-hut"
+github:              "hmontero1205/barnes-hut"
 license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2020 Author name here"
+author:              "Hans Montero, Rhys Murray"
+maintainer:          "hjm2133@columbia.edu, ram2269@columbia.edu"
+copyright:           "2020 Nuss Tendie"
 
 extra-source-files:
 - README.md
@@ -17,7 +17,7 @@ extra-source-files:
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/githubuser/barnes-hut#readme>
+description:         Please see the README on GitHub at <https://github.com/hmontero1205/barnes-hut#readme>
 
 dependencies:
 - base >= 4.7 && < 5
