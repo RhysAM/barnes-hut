@@ -2,7 +2,6 @@ module Main where
 import QuadTree
 import Physics
 import Visualize
-import GHC.Float
 
 doLoop :: QuadTree -> Double -> QuadTree
 doLoop oldTree dt = newTree
@@ -14,11 +13,7 @@ doLoop oldTree dt = newTree
 type Model = (Float, Float)
 
 main :: IO ()
-main = simulate (InWindow "Nice Window" (1500, 1500) (10, 10)) 
-       white 60 
-       smol
-       (\(qt) -> drawQuadTree  
-       (\_ dt (qt) -> doLoop qt (float2Double dt))
+main = runSimulation smol doLoop
 
 emptySmol = emptyQTree 0 200 0 200
 b1' = Body 250 0 0 0 0

@@ -2,6 +2,7 @@ module Visualize where
 
 import Graphics.Gloss
 import QuadTree
+import GHC.Float
 
 getCircle :: Float -> Picture
 getCircle size = circle size
@@ -14,3 +15,10 @@ drawBody b = Translate x y (getCircle mass')
 
 drawQuadTree :: QuadTree -> Picture
 drawQuadTree = pictures . map drawBody . toList
+
+runSimulation :: QuadTree -> (QuadTree -> Double -> QuadTree) -> IO ()
+runSimulation qt updateFunc = simulate (InWindow "Nice Window" (1500, 1500) (10, 10)) 
+			       white 60 
+			       qt
+			       (\(qt) -> drawQuadTree qt)  
+			       (\_ dt (qt) -> updateFunc qt (float2Double dt))
