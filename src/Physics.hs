@@ -2,8 +2,7 @@ module Physics where
 import QuadTree
 
 thetaThreshold = 0
-g = 1
-timeStep = 0.5
+g = 500
 
 combineBodies :: Body -> Body -> Body
 combineBodies b1 b2 = b1 {mass = mass b1 + mass b2, xVel = xVel b1 + xVel b2, yVel = yVel b1 + yVel b2}
@@ -28,15 +27,15 @@ approximateForce qt@(QuadTree nw ne sw se qi) b
         theta = (xr qi - xl qi) / sqrt distance
         referenceMass = Body (getCOMM qt) (getCOMX qt) (getCOMY qt) 0 0 -- Consider the COM a body for calculation
 
-doTimeStep :: Body -> Body
-doTimeStep b = b {xCord = xCord b + xVel b * timeStep, yCord = yCord b + yVel b * timeStep}
+doTimeStep :: Double -> Body -> Body
+doTimeStep timeStep b = b {xCord = xCord b + xVel b * timeStep, yCord = yCord b + yVel b * timeStep}
 
 updateVelocity :: Body -> Body -> Body
 updateVelocity bodyToUpdate otherBody 
   | bodyToUpdate == otherBody = bodyToUpdate
-  | otherwise = bodyToUpdate {xVel = xVel bodyToUpdate +  xVelChange, yVel = yVel bodyToUpdate + yVelChange}
+  | otherwise = bodyToUpdate {xVel = xVel bodyToUpdate - xVelChange, yVel = yVel bodyToUpdate - yVelChange}
   where (xDiff, yDiff) = (xCord bodyToUpdate - xCord otherBody, yCord bodyToUpdate - yCord otherBody)
         distance = xDiff * xDiff + yDiff * yDiff
         angleToBody = atan2 yDiff xDiff
-        xVelChange = g * cos angleToBody * (mass bodyToUpdate * mass otherBody / distance)
-        yVelChange = g * sin angleToBody * (mass bodyToUpdate * mass otherBody / distance)
+        xVelChange = g * cos angleToBody * (mass otherBody / distance)
+        yVelChange = g * sin angleToBody * (mass otherBody / distance)

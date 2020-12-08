@@ -27,12 +27,14 @@ library
   exposed-modules:
       Physics
       QuadTree
+      Visualize
   other-modules:
       Paths_barnes_hut
   hs-source-dirs:
       src
   build-depends:
       base >=4.7 && <5
+    , gloss
   default-language: Haskell2010
 
 executable barnes-hut-exe
@@ -59,4 +61,5 @@ test-suite barnes-hut-test
   build-depends:
       barnes-hut
     , base >=4.7 && <5
+    , gloss
   default-language: Haskell2010
