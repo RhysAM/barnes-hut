@@ -8,7 +8,7 @@ getCircle :: Float -> Picture
 getCircle size = circle size
 
 drawBody :: Body -> Picture
-drawBody b = Color white $ Translate x y (getCircle 5)
+drawBody b = Color white $ Translate x y (getCircle (realToFrac $ radius b))
     where x = realToFrac $ xCord b
           y = realToFrac $ yCord b
           mass' = realToFrac $ mass b

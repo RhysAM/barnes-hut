@@ -2,7 +2,9 @@ module Physics where
 import QuadTree
 
 thetaThreshold = 0
-g = 5
+g = 50
+
+defaultOrbiterRadius = 25
 
 combineBodies :: Body -> Body -> Body
 combineBodies b1 b2 = b1 {mass = mass b1 + mass b2, xVel = xVel b1 + xVel b2, yVel = yVel b1 + yVel b2}
@@ -25,7 +27,7 @@ approximateForce qt@(QuadTree nw ne sw se qi) b
   where (xDiff, yDiff) = (xCord b - getCOMX qt, yCord b - getCOMY qt)
         distance = xDiff * xDiff + yDiff * yDiff
         theta = (xr qi - xl qi) / sqrt distance
-        referenceMass = Body (getCOMM qt) (getCOMX qt) (getCOMY qt) 0 0 -- Consider the COM a body for calculation
+        referenceMass = Body (getCOMM qt) (getCOMX qt) (getCOMY qt) 0 0 0 -- Consider the COM a body for calculation
         notIn = not $ inQuad qt b
 
 doTimeStep :: Double -> Body -> Body
@@ -45,5 +47,5 @@ circularVelocity :: Double -> Double -> Double
 circularVelocity massSun radius = sqrt (g * massSun / radius) 
 
 generateOrbiter :: Body -> Double -> Double -> Body
-generateOrbiter sun radius mass' = Body mass' (xCord sun + radius) (yCord sun) (xVel sun) (yVel sun + velocity) -- Start at same y level
+generateOrbiter sun radius mass' = Body mass' (xCord sun + radius) (yCord sun) (xVel sun) (yVel sun + velocity) defaultOrbiterRadius-- Start at same y level
   where velocity = 5 * circularVelocity (mass sun) radius -- Why doesn't this work?

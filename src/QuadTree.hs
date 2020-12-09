@@ -5,6 +5,7 @@ data Body = Body {  mass :: Double
                  ,  yCord :: Double
                  ,  xVel :: Double
                  ,  yVel :: Double
+                 ,  radius :: Double
                  }
 
 instance Eq Body where
@@ -29,7 +30,7 @@ instance Show QuadInfo where
     show (QuadInfo xxl xxr yyb yyt com') = "QI[ X:" ++ show xxl ++ "-" ++ show xxr ++ ", Y:" ++ show yyb ++ "-" ++ show yyt ++ ", "++ show com' ++ "]"
 
 instance Show Body where
-    show (Body m x y xVel yVel) = "body @ (" ++ show x ++ ", " ++ show y ++ ") -> mass: " ++ show m ++ ", vel: (" ++ show xVel ++ ", " ++ show yVel ++ ")"
+    show (Body m x y xVel yVel radius) = "body @ (" ++ show x ++ ", " ++ show y ++ ") -> mass: " ++ show m ++ ", vel: (" ++ show xVel ++ ", " ++ show yVel ++ ")" ++ ", radius: " ++ show radius
 
 data QuadTree = QuadTree QuadTree QuadTree QuadTree QuadTree QuadInfo
               | QuadNode (Maybe Body) QuadInfo

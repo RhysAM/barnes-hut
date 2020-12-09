@@ -17,25 +17,25 @@ main :: IO ()
 main = runSimulation smol doLoop --(\qt _ -> qt) --doLoop
 
 emptySmol = emptyQTree 0 200 0 200
-b1' = Body 15000 0 0 0 0
-b2' = Body 10 500 0 0 125
+b1' = Body 15000 0 0 0 0 100
+b2' = Body 10 500 0 0 125 200
 
-b1Orbiters = map (\x -> generateOrbiter b1' x 5) [500,600..3000] 
+b1Orbiters = map (\x -> generateOrbiter b1' x 5) [1000,1100..5000] 
 
-sunMass :: Double
-sunMass = 1.98892*(10^30)
-sun = Body sunMass 0 0 0 0
-mercury = Body (0.3301*(10^24) :: Double) (-0.387 * au) 0 0 (-47.36)
-venus = Body (4.8685*(10^24) :: Double) (-0.723 * au) 0 0 (-35.02)
-earth = Body (5.9742*(10^24) :: Double) (-1 * au) 0 0 (-29.783)
-mars = Body (0.6417*(10^24) :: Double) (-1.524 * au) 0 0 (-24.07)
+-- sunMass :: Double
+-- sunMass = 1.98892*(10^30)
+-- sun = Body sunMass 0 0 0 0
+-- mercury = Body (0.3301*(10^24) :: Double) (-0.387 * au) 0 0 (-47.36)
+-- venus = Body (4.8685*(10^24) :: Double) (-0.723 * au) 0 0 (-35.02)
+-- earth = Body (5.9742*(10^24) :: Double) (-1 * au) 0 0 (-29.783)
+-- mars = Body (0.6417*(10^24) :: Double) (-1.524 * au) 0 0 (-24.07)
 
 empty = emptyQTree (-20000) 20000 (-20000) 20000
 
 smol = calcCOM $ insert b1' $ fromList b1Orbiters (getInfo empty)
 
-solarSystem = calcCOM $ insert mars $ insert earth $ insert venus $ insert mercury $ insert sun empty
+-- solarSystem = calcCOM $ insert mars $ insert earth $ insert venus $ insert mercury $ insert sun empty
 
-bodyList = [(Body 5 (x * 15 + 100) (x * 15) 0 0) | x <- [0..5]]
+bodyList = [(Body 5 (x * 15 + 100) (x * 15) 0 0 10) | x <- [0..5]]
 bigTree = calcCOM $ insert b1' $ foldl (flip insert) empty bodyList
 
