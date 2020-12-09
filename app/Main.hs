@@ -13,7 +13,7 @@ doLoop oldTree dt = newTree
 type Model = (Float, Float)
 
 main :: IO ()
-main = runSimulation smol doLoop
+main = runSimulation bigTree (\qt _ -> qt)
 
 emptySmol = emptyQTree 0 200 0 200
 b1' = Body 250 0 0 0 0
