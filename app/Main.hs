@@ -20,7 +20,7 @@ emptySmol = emptyQTree 0 200 0 200
 b1' = Body 5000000 0 0 0 0 1
 b2' = Body 10 500 0 0 125 200
 
-b1Orbiters = map (\x -> generateOrbiter b1' x 5) [500,1500..10000] 
+b1Orbiters = map (\x -> generateOrbiter b1' x 5) [500,1500..50000] 
 
 -- sunMass :: Double
 -- sunMass = 1.98892*(10^30)

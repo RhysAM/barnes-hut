@@ -55,11 +55,13 @@ toList (QuadTree nw ne sw se _) = toList nw ++ toList ne ++ toList sw ++ toList 
 
 fromList :: [Body] -> QuadInfo -> QuadTree
 fromList bs qi = foldl (flip insert) empty bs 
-    where empty = emptyQTree xl' xr' yb' yt' -- Dynamically calculate bounds of new Quadtree
+    where empty = emptyQTree minNum maxNum minNum maxNum -- Dynamically calculate bounds of new Quadtree
           xl' = min (xl qi) (minimum $ map xCord bs)
           xr' = max (xr qi) (maximum $ map xCord bs)
           yb' = min (yb qi) (minimum $ map yCord bs)
           yt' = max (yt qi) (maximum $ map yCord bs)
+          minNum = min xl' yb' -- ensure we always have a square
+          maxNum = max xr' yt'
 
 getInfo :: QuadTree -> QuadInfo
 getInfo (QuadTree _ _ _ _ qi) = qi
