@@ -1,8 +1,8 @@
 module Physics where
 import QuadTree
 
-thetaThreshold = 5
-g = 500
+thetaThreshold = 0
+g = 5
 
 combineBodies :: Body -> Body -> Body
 combineBodies b1 b2 = b1 {mass = mass b1 + mass b2, xVel = xVel b1 + xVel b2, yVel = yVel b1 + yVel b2}
@@ -40,3 +40,10 @@ updateVelocity bodyToUpdate otherBody
         angleToBody = atan2 yDiff xDiff
         xVelChange = g * cos angleToBody * (mass otherBody / distance)
         yVelChange = g * sin angleToBody * (mass otherBody / distance)
+
+circularVelocity :: Double -> Double -> Double
+circularVelocity massSun radius = sqrt (g * massSun / radius) 
+
+generateOrbiter :: Body -> Double -> Double -> Body
+generateOrbiter sun radius mass' = Body mass' (xCord sun + radius) (yCord sun) (xVel sun) (yVel sun + velocity) -- Start at same y level
+  where velocity = 5 * circularVelocity (mass sun) radius -- Why doesn't this work?
