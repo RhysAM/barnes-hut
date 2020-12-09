@@ -1,7 +1,7 @@
 module Physics where
 import QuadTree
 
-thetaThreshold = 0.5
+thetaThreshold = 5
 g = 500
 
 combineBodies :: Body -> Body -> Body
@@ -20,7 +20,7 @@ approximateForce :: QuadTree -> Body -> Body -- Run Barnes Hut
 approximateForce (QuadNode Nothing qi) b = b -- nothing to compute
 approximateForce (QuadNode (Just b1) qi) b = if b == b1 then b else updateVelocity b b1
 approximateForce qt@(QuadTree nw ne sw se qi) b
-  | theta < thetaThreshold && notIn = updateVelocity b referenceMass-- Treat this quadrant as a single mass
+  | theta < thetaThreshold  = updateVelocity b referenceMass-- Treat this quadrant as a single mass
   | otherwise = foldQuads approximateForce b qt
   where (xDiff, yDiff) = (xCord b - getCOMX qt, yCord b - getCOMY qt)
         distance = xDiff * xDiff + yDiff * yDiff
