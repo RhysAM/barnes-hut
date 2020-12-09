@@ -2,9 +2,10 @@ module Main where
 import QuadTree
 import Physics
 import Visualize
+import Debug.Trace
 
 doLoop :: QuadTree -> Double -> QuadTree
-doLoop oldTree dt = newTree
+doLoop oldTree dt = traceShow newTree newTree
   where oldbodyList = toList oldTree
         updatedBodyList = map (approximateForce oldTree) oldbodyList
         movedBodyList = map (doTimeStep dt) updatedBodyList

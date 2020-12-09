@@ -9,9 +9,9 @@ getCircle size = circle size
 
 drawBody :: Body -> Picture
 drawBody b = Translate x y (getCircle mass')
-  where x = realToFrac $ xCord b
-        y = realToFrac $ yCord b
-        mass' = realToFrac $ mass b
+    where x = realToFrac $ xCord b
+          y = realToFrac $ yCord b
+          mass' = realToFrac $ mass b
 
 drawQuadTree :: QuadTree -> [Picture] -> [Picture]
 drawQuadTree (QuadNode (Nothing) qi) pics = (drawBox qi) : pics
@@ -25,8 +25,8 @@ drawBox qi = Translate x y (rectangleWire (realToFrac $ (xr qi - xl qi)) (realTo
 
 
 runSimulation :: QuadTree -> (QuadTree -> Double -> QuadTree) -> IO ()
-runSimulation qt updateFunc = simulate (InWindow "Nice Window" (1500, 1500) (10, 10)) 
-			       white 60 
-			       qt
-			       (\(qt) -> pictures $ drawQuadTree qt [])  
-			       (\_ dt (qt) -> updateFunc qt (float2Double dt))
+runSimulation qt updateFunc = simulate (InWindow "Barnes-Hut Simulation" (1500, 1500) (10, 10)) 
+                              white 60
+                              qt
+                              (\(qt) -> drawQuadTree qt)
+                              (\_ dt (qt) -> updateFunc qt (float2Double dt))
