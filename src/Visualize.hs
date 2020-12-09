@@ -5,7 +5,7 @@ import QuadTree
 import GHC.Float
 
 getCircle :: Float -> Picture
-getCircle size = circle size
+getCircle size = circleSolid size
 
 drawBody :: Body -> Picture
 drawBody b = Color white $ Translate x y (getCircle (realToFrac $ radius b))

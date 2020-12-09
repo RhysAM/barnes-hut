@@ -7,7 +7,7 @@ import Debug.Trace
 doLoop :: QuadTree -> Double -> QuadTree
 doLoop oldTree dt = newTree --traceShow newTree newTree
   where oldbodyList = toList oldTree
-        updatedBodyList = map (approximateForce oldTree) oldbodyList
+        updatedBodyList = map (\b -> approximateForce oldTree b dt) oldbodyList
         movedBodyList = map (doTimeStep dt) updatedBodyList
         newTree = calcCOM $ fromList movedBodyList (getInfo oldTree)
 
@@ -17,10 +17,10 @@ main :: IO ()
 main = runSimulation smol doLoop --(\qt _ -> qt) --doLoop
 
 emptySmol = emptyQTree 0 200 0 200
-b1' = Body 15000 0 0 0 0 100
+b1' = Body 5000000 0 0 0 0 1
 b2' = Body 10 500 0 0 125 200
 
-b1Orbiters = map (\x -> generateOrbiter b1' x 5) [1000,1100..5000] 
+b1Orbiters = map (\x -> generateOrbiter b1' x 5) [500,1500..10000] 
 
 -- sunMass :: Double
 -- sunMass = 1.98892*(10^30)
