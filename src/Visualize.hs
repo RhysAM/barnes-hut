@@ -28,5 +28,5 @@ runSimulation :: QuadTree -> (QuadTree -> Double -> QuadTree) -> IO ()
 runSimulation qt updateFunc = simulate (InWindow "Barnes-Hut Simulation" (1500, 1500) (10, 10)) 
                               white 60
                               qt
-                              (\(qt) -> drawQuadTree qt)
+                              (\(qt) -> pictures $ drawQuadTree qt [])
                               (\_ dt (qt) -> updateFunc qt (float2Double dt))
