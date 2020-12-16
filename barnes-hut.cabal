@@ -34,10 +34,12 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , deepseq
     , gloss
+    , parallel
   default-language: Haskell2010
 
-executable barnes-hut-exe
+executable barnes-hut
   main-is: Main.hs
   other-modules:
       Paths_barnes_hut
@@ -47,7 +49,9 @@ executable barnes-hut-exe
   build-depends:
       barnes-hut
     , base >=4.7 && <5
+    , deepseq
     , gloss
+    , parallel
   default-language: Haskell2010
 
 test-suite barnes-hut-test
@@ -61,5 +65,7 @@ test-suite barnes-hut-test
   build-depends:
       barnes-hut
     , base >=4.7 && <5
+    , deepseq
     , gloss
+    , parallel
   default-language: Haskell2010

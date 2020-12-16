@@ -1,4 +1,5 @@
 module QuadTree where
+import Control.DeepSeq
 
 data Body = Body {  mass :: Double
                  ,  xCord :: Double
@@ -7,6 +8,14 @@ data Body = Body {  mass :: Double
                  ,  yVel :: Double
                  ,  radius :: Double
                  }
+
+instance NFData Body where
+    rnf (Body m x y xv yv r) = rnf m `deepseq`
+                               rnf x `deepseq`
+                               rnf y `deepseq`
+                               rnf xv `deepseq`
+                               rnf yv `deepseq`
+                               rnf r
 
 instance Eq Body where
   b1 == b2 = (xCord b1 == xCord b2) && (yCord b1 == yCord b2)

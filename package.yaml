@@ -22,12 +22,14 @@ description:         Please see the README on GitHub at <https://github.com/hmon
 dependencies:
 - base >= 4.7 && < 5
 - gloss
+- parallel
+- deepseq
 
 library:
   source-dirs: src
 
 executables:
-  barnes-hut-exe:
+  barnes-hut:
     main:                Main.hs
     source-dirs:         app
     ghc-options:

@@ -3,6 +3,14 @@ import QuadTree
 import Physics
 import Visualize
 import Debug.Trace
+import Control.Parallel.Strategies(parMap, runEval, rdeepseq)
+
+doLoopParMap :: QuadTree -> Double -> QuadTree
+doLoopParMap oldTree dt = newTree --traceShow newTree newTree
+  where oldbodyList = toList oldTree
+        updatedBodyList = parMap rdeepseq (\b -> approximateForce oldTree b dt) oldbodyList
+        movedBodyList = parMap rdeepseq (doTimeStep dt) updatedBodyList
+        newTree = calcCOM $ fromList movedBodyList (getInfo oldTree)
 
 doLoop :: QuadTree -> Double -> QuadTree
 doLoop oldTree dt = newTree --traceShow newTree newTree
@@ -11,17 +19,10 @@ doLoop oldTree dt = newTree --traceShow newTree newTree
         movedBodyList = map (doTimeStep dt) updatedBodyList
         newTree = calcCOM $ fromList movedBodyList (getInfo oldTree)
 
-doLoopParMap :: QuadTree -> Double -> QuadTree
-doLoopParMap oldTree dt = newTree --traceShow newTree newTree
-  where oldbodyList = toList oldTree
-        updatedBodyList = map (\b -> approximateForce oldTree b dt) oldbodyList
-        movedBodyList = map (doTimeStep dt) updatedBodyList
-        newTree = calcCOM $ fromList movedBodyList (getInfo oldTree)
-
 au = (149.6 * (10^6) * 1000) :: Double
 
 main :: IO ()
-main = runSimulation smol doLoop --(\qt _ -> qt) --doLoop
+main = runSimulation smol doLoopParMap --(\qt _ -> qt) --doLoop
 
 emptySmol = emptyQTree 0 200 0 200
 b1' = Body 5000000 0 0 0 0 1
