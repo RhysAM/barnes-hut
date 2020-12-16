@@ -11,6 +11,13 @@ doLoop oldTree dt = newTree --traceShow newTree newTree
         movedBodyList = map (doTimeStep dt) updatedBodyList
         newTree = calcCOM $ fromList movedBodyList (getInfo oldTree)
 
+doLoopParMap :: QuadTree -> Double -> QuadTree
+doLoopParMap oldTree dt = newTree --traceShow newTree newTree
+  where oldbodyList = toList oldTree
+        updatedBodyList = map (\b -> approximateForce oldTree b dt) oldbodyList
+        movedBodyList = map (doTimeStep dt) updatedBodyList
+        newTree = calcCOM $ fromList movedBodyList (getInfo oldTree)
+
 au = (149.6 * (10^6) * 1000) :: Double
 
 main :: IO ()
