@@ -1,7 +1,7 @@
 module Physics where
 import QuadTree
 
-thetaThreshold = 1
+thetaThreshold = 0
 g = 1000
 
 defaultOrbiterRadius = 100
@@ -48,4 +48,4 @@ circularVelocity massSun radius = sqrt (g * massSun / radius)
 
 generateOrbiter :: Body -> Double -> Double -> Body
 generateOrbiter sun radius mass' = Body mass' (xCord sun + radius) (yCord sun) (xVel sun) (yVel sun + velocity) defaultOrbiterRadius-- Start at same y level
-  where velocity = circularVelocity (mass sun) radius -- Why doesn't this work?
+  where velocity = circularVelocity (mass sun) radius
