@@ -3,13 +3,23 @@ import QuadTree
 import Physics
 import Visualize
 import Debug.Trace
-import Control.Parallel.Strategies(parMap, runEval, rdeepseq)
+import Control.Parallel.Strategies(parMap, runEval, rdeepseq, parListChunk, using)
+
+nChunks :: Int
+nChunks = 16
 
 doLoopParMap :: QuadTree -> Double -> QuadTree
 doLoopParMap oldTree dt = newTree --traceShow newTree newTree
   where oldbodyList = toList oldTree
         updatedBodyList = parMap rdeepseq (\b -> approximateForce oldTree b dt) oldbodyList
         movedBodyList = parMap rdeepseq (doTimeStep dt) updatedBodyList
+        newTree = calcCOM $ fromList movedBodyList (getInfo oldTree)
+
+doLoopParListChunks :: QuadTree -> Double -> QuadTree
+doLoopParListChunks oldTree dt = newTree --traceShow newTree newTree
+  where oldbodyList = toList oldTree
+        updatedBodyList = map (\b -> approximateForce oldTree b dt) oldbodyList `using` parListChunk nChunks rdeepseq
+        movedBodyList = map (doTimeStep dt) updatedBodyList `using` parListChunk nChunks rdeepseq
         newTree = calcCOM $ fromList movedBodyList (getInfo oldTree)
 
 doLoop :: QuadTree -> Double -> QuadTree
@@ -21,8 +31,14 @@ doLoop oldTree dt = newTree --traceShow newTree newTree
 
 au = (149.6 * (10^6) * 1000) :: Double
 
+runLoop :: Int -> (QuadTree -> Double -> QuadTree) -> QuadTree -> Double -> [QuadTree]
+runLoop n loopFunc startTree dt = take n $ iterate (\qt -> loopFunc qt dt) startTree
+
 main :: IO ()
-main = runSimulation smol doLoopParMap --(\qt _ -> qt) --doLoop
+main = do 
+    let x = runLoop 5001 doLoopParMap smol (0.5)
+    print (x !! (5001 - 1)) -- very ugly way to force evaluation
+    return () -- runSimulation smol doLoopParMap --(\qt _ -> qt) --doLoop
 
 emptySmol = emptyQTree 0 200 0 200
 b1' = Body 5000000 0 0 0 0 1
