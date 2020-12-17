@@ -37,6 +37,7 @@ library
     , deepseq
     , gloss
     , parallel
+    , split
   default-language: Haskell2010
 
 executable barnes-hut
@@ -45,13 +46,14 @@ executable barnes-hut
       Paths_barnes_hut
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -eventlog
+  ghc-options: -Wall -O2 -threaded -rtsopts -with-rtsopts=-N -eventlog
   build-depends:
       barnes-hut
     , base >=4.7 && <5
     , deepseq
     , gloss
     , parallel
+    , split
   default-language: Haskell2010
 
 test-suite barnes-hut-test
@@ -68,4 +70,5 @@ test-suite barnes-hut-test
     , deepseq
     , gloss
     , parallel
+    , split
   default-language: Haskell2010

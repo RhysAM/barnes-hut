@@ -3,27 +3,43 @@ import QuadTree
 import Physics
 import Visualize
 import Debug.Trace
-import Control.Parallel.Strategies(parMap, runEval, rdeepseq, parListChunk, using)
+import Control.Parallel.Strategies(parMap, runEval, rdeepseq, parListChunk, using, parBuffer)
+import System.Environment (getArgs, getProgName)
+import System.Exit
+import Data.List.Split(chunksOf)
 
-nChunks :: Int
-nChunks = 16
-
-doLoopParMap :: QuadTree -> Double -> QuadTree
-doLoopParMap oldTree dt = newTree --traceShow newTree newTree
+barnesHutParMap :: QuadTree -> Double -> QuadTree
+barnesHutParMap oldTree dt = newTree --traceShow newTree newTree
   where oldbodyList = toList oldTree
         updatedBodyList = parMap rdeepseq (\b -> approximateForce oldTree b dt) oldbodyList
-        movedBodyList = parMap rdeepseq (doTimeStep dt) updatedBodyList
+        movedBodyList = map (doTimeStep dt) updatedBodyList--parMap rdeepseq (doTimeStep dt) updatedBodyList
         newTree = calcCOM $ fromList movedBodyList (getInfo oldTree)
 
-doLoopParListChunks :: QuadTree -> Double -> QuadTree
-doLoopParListChunks oldTree dt = newTree --traceShow newTree newTree
+barnesHutParBufChunks :: Int -> QuadTree -> Double -> QuadTree
+barnesHutParBufChunks cz oldTree dt = newTree --traceShow newTree newTree
   where oldbodyList = toList oldTree
-        updatedBodyList = map (\b -> approximateForce oldTree b dt) oldbodyList `using` parListChunk nChunks rdeepseq
-        movedBodyList = map (doTimeStep dt) updatedBodyList `using` parListChunk nChunks rdeepseq
+        updatedBodyList = concat (map (\bs -> map (\b -> approximateForce oldTree b dt) bs) (chunksOf cz oldbodyList) `using` parBuffer 100 rdeepseq)
+        movedBodyList = map (doTimeStep dt) updatedBodyList --`using` parListChunk nChunks rdeepseq
         newTree = calcCOM $ fromList movedBodyList (getInfo oldTree)
 
-doLoop :: QuadTree -> Double -> QuadTree
-doLoop oldTree dt = newTree --traceShow newTree newTree
+
+
+barnesHutParListChunks :: Int -> QuadTree -> Double -> QuadTree
+barnesHutParListChunks cz oldTree dt = newTree --traceShow newTree newTree
+  where oldbodyList = toList oldTree
+        updatedBodyList = map (\b -> approximateForce oldTree b dt) oldbodyList `using` parListChunk cz rdeepseq
+        movedBodyList = map (doTimeStep dt) updatedBodyList --`using` parListChunk nChunks rdeepseq
+        newTree = calcCOM $ fromList movedBodyList (getInfo oldTree)
+
+barnesHutParBuffer :: QuadTree -> Double -> QuadTree
+barnesHutParBuffer oldTree dt = newTree --traceShow newTree newTree
+  where oldbodyList = toList oldTree
+        updatedBodyList = map (\b -> approximateForce oldTree b dt) oldbodyList `using` parBuffer 100 rdeepseq
+        movedBodyList = map (doTimeStep dt) updatedBodyList --`using` parListChunk nChunks rdeepseq
+        newTree = calcCOM $ fromList movedBodyList (getInfo oldTree)
+
+barnesHut :: QuadTree -> Double -> QuadTree
+barnesHut oldTree dt = newTree --traceShow newTree newTree
   where oldbodyList = toList oldTree
         updatedBodyList = map (\b -> approximateForce oldTree b dt) oldbodyList
         movedBodyList = map (doTimeStep dt) updatedBodyList
@@ -31,14 +47,27 @@ doLoop oldTree dt = newTree --traceShow newTree newTree
 
 au = (149.6 * (10^6) * 1000) :: Double
 
-runLoop :: Int -> (QuadTree -> Double -> QuadTree) -> QuadTree -> Double -> [QuadTree]
-runLoop n loopFunc startTree dt = take n $ iterate (\qt -> loopFunc qt dt) startTree
+simpleLoop :: Int -> (QuadTree -> Double -> QuadTree) -> QuadTree -> Double -> QuadTree
+simpleLoop n f tree dt
+  | n > 0 = simpleLoop (n - 1) f (f tree dt) dt
+  | otherwise = tree
+
+doUsage :: IO ()
+doUsage = do progName <- getProgName
+             die $ "usage: " ++ progName ++
+                 " [-i <iterations> [pm|plc <chunk-size>|pb|pbc <chunk-size>]]"
 
 main :: IO ()
 main = do 
-    let x = runLoop 5001 doLoopParMap smol (0.5)
-    print (x !! (5001 - 1)) -- very ugly way to force evaluation
-    return () -- runSimulation smol doLoopParMap --(\qt _ -> qt) --doLoop
+    args <- getArgs
+    case args of
+      [] -> runSimulation smol barnesHut
+      ["-i", iters] -> (putStrLn . show) $ simpleLoop (read iters) barnesHut smol (0.5)
+      ["-i", iters, "pm"] -> (putStrLn . show) $ simpleLoop (read iters) barnesHutParMap smol (0.5)
+      ["-i", iters, "plc", cz] -> (putStrLn . show) $ simpleLoop (read iters) (barnesHutParListChunks $ read cz) smol (0.5)
+      ["-i", iters, "pbc", cz] -> (putStrLn . show) $ simpleLoop (read iters) (barnesHutParBufChunks $ read cz) smol (0.5)
+      ["-i", iters, "pb"] -> (putStrLn . show) $ simpleLoop (read iters) barnesHutParBuffer smol (0.5)
+      _ -> doUsage
 
 emptySmol = emptyQTree 0 200 0 200
 b1' = Body 5000000 0 0 0 0 1

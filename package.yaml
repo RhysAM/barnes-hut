@@ -24,6 +24,7 @@ dependencies:
 - gloss
 - parallel
 - deepseq
+- split
 
 library:
   source-dirs: src
@@ -33,6 +34,8 @@ executables:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
+    - -Wall
+    - -O2
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
