@@ -58,8 +58,8 @@ data QuadTree = QuadTree QuadTree QuadTree QuadTree QuadTree QuadInfo
               | QuadNode (Maybe Body) QuadInfo
 
 instance NFData QuadTree where
-    rnf (QuadTree nw ne sw se qi) = rnf nw `seq` rnf ne `seq` rnf sw `seq` rnf se `seq` rnf qi
-    rnf (QuadNode (Just b) qi) = rnf b `seq` rnf qi
+    rnf (QuadTree nw ne sw se qi) = rnf nw `deepseq` rnf ne `deepseq` rnf sw `deepseq` rnf se `deepseq` rnf qi
+    rnf (QuadNode (Just b) qi) = rnf b `deepseq` rnf qi
     rnf (QuadNode (Nothing) qi) = rnf qi
 
 getCOMX :: QuadTree -> Double
