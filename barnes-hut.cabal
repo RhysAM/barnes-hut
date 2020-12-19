@@ -46,7 +46,7 @@ executable barnes-hut
       Paths_barnes_hut
   hs-source-dirs:
       app
-  ghc-options: -Wall -O2 -threaded -rtsopts -with-rtsopts=-N -eventlog
+  ghc-options: -Wall -O2 -threaded -rtsopts -eventlog
   build-depends:
       barnes-hut
     , base >=4.7 && <5
@@ -63,7 +63,7 @@ test-suite barnes-hut-test
       Paths_barnes_hut
   hs-source-dirs:
       test
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts
   build-depends:
       barnes-hut
     , base >=4.7 && <5

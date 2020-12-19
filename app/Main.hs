@@ -27,9 +27,10 @@ barnesHutParBufChunks cz oldTree dt = newTree --traceShow newTree newTree
         newTree = calcCOM $ fromList updatedBodyList (getInfo oldTree)
 
 barnesHutParListChunks :: Int -> QuadTree -> Double -> QuadTree
-barnesHutParListChunks cz oldTree dt = let oldbodyList = toList oldTree
-                                           updatedBodyList = map (\b -> doTimeStep dt $ approximateForce oldTree b dt) oldbodyList `using` parListChunk cz rdeepseq
-                                       in  calcCOM $ fromList updatedBodyList (getInfo oldTree)
+barnesHutParListChunks cz oldTree dt = newTree --traceShow newTree newTree
+  where oldbodyList = toList oldTree
+        updatedBodyList = map (\b -> doTimeStep dt $ approximateForce oldTree b dt) oldbodyList `using` parListChunk cz rdeepseq
+        newTree = calcCOM $ fromList updatedBodyList (getInfo oldTree)
 
 barnesHutParBuffer :: QuadTree -> Double -> QuadTree
 barnesHutParBuffer oldTree dt = newTree --traceShow newTree newTree
@@ -73,7 +74,7 @@ emptySmol = emptyQTree 0 200 0 200
 b1' = Body 500000000 0 0 0 0 1
 b2' = Body 10 500 0 0 125 200
 
-b1Orbiters = map (\x -> generateOrbiter b1' x 5) [500,1500..99850] --98500]
+b1Orbiters = map (\x -> generateOrbiter b1' x 5) [500,1500..998500] --98500]
 
 -- sunMass :: Double
 -- sunMass = 1.98892*(10^30)
