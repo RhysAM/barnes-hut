@@ -7,6 +7,7 @@ import Control.Parallel.Strategies(parMap, runEval, rdeepseq, parListChunk, usin
 import Control.Concurrent
 import System.Environment (getArgs, getProgName)
 import System.Exit
+import Data.List((\\))
 import Data.List.Split(chunksOf)
 import Control.DeepSeq
 
@@ -28,7 +29,6 @@ barnesHutParBufChunks cz oldTree dt = newTree --traceShow newTree newTree
 barnesHutParListChunks :: Int -> QuadTree -> Double -> QuadTree
 barnesHutParListChunks cz oldTree dt = let oldbodyList = toList oldTree
                                            updatedBodyList = map (\b -> doTimeStep dt $ approximateForce oldTree b dt) oldbodyList `using` parListChunk cz rdeepseq
-                                           xd = foldr deepseq () [x^2 | x<-[1..1000000] :: [Int]]
                                        in  calcCOM $ fromList updatedBodyList (getInfo oldTree)
 
 barnesHutParBuffer :: QuadTree -> Double -> QuadTree
@@ -70,10 +70,10 @@ main = do
       _ -> doUsage
 
 emptySmol = emptyQTree 0 200 0 200
-b1' = Body 5000000 0 0 0 0 1
+b1' = Body 500000000 0 0 0 0 1
 b2' = Body 10 500 0 0 125 200
 
-b1Orbiters = map (\x -> generateOrbiter b1' x 5) [500,1500..98500]
+b1Orbiters = map (\x -> generateOrbiter b1' x 5) [500,1500..99850] --98500]
 
 -- sunMass :: Double
 -- sunMass = 1.98892*(10^30)

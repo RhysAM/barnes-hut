@@ -1,5 +1,7 @@
 module QuadTree where
 import Control.DeepSeq
+import Data.List.Split(chunksOf)
+import Control.Parallel.Strategies(parList, rdeepseq, runEval, using, rparWith, rpar, parMap, rseq)
 
 data Body = Body {  mass :: Double
                  ,  xCord :: Double
@@ -25,6 +27,9 @@ data CenterMass = CenterMass {  cMass :: Double
                              ,  cy :: Double
                              }
 
+instance NFData CenterMass where
+  rnf (CenterMass m x y) = rnf m `deepseq` rnf x `deepseq` rnf y
+
 instance Show CenterMass where
     show (CenterMass ma xx yy) = "COM " ++ show ma ++ " @ " ++ "(" ++ show xx ++ ", " ++ show yy ++ ")"
 
@@ -35,6 +40,14 @@ data QuadInfo = QuadInfo {  xl :: Double
                          ,  com :: CenterMass
                          }
 
+instance NFData QuadInfo where
+    rnf (QuadInfo xl xr yb yt com) = rnf xl `deepseq`
+                                     rnf xr `deepseq`
+                                     rnf yb `deepseq`
+                                     rnf yt `deepseq`
+                                     rnf com 
+                              
+
 instance Show QuadInfo where
     show (QuadInfo xxl xxr yyb yyt com') = "QI[ X:" ++ show xxl ++ "-" ++ show xxr ++ ", Y:" ++ show yyb ++ "-" ++ show yyt ++ ", "++ show com' ++ "]"
 
@@ -44,6 +57,10 @@ instance Show Body where
 data QuadTree = QuadTree QuadTree QuadTree QuadTree QuadTree QuadInfo
               | QuadNode (Maybe Body) QuadInfo
 
+instance NFData QuadTree where
+    rnf (QuadTree nw ne sw se qi) = rnf nw `seq` rnf ne `seq` rnf sw `seq` rnf se `seq` rnf qi
+    rnf (QuadNode (Just b) qi) = rnf b `seq` rnf qi
+    rnf (QuadNode (Nothing) qi) = rnf qi
 
 getCOMX :: QuadTree -> Double
 getCOMX (QuadTree _ _ _ _ qi) = cx . com $ qi
@@ -63,7 +80,9 @@ toList (QuadNode (Just b) _) = [b]
 toList (QuadTree nw ne sw se _) = toList nw ++ toList ne ++ toList sw ++ toList se
 
 fromList :: [Body] -> QuadInfo -> QuadTree
-fromList bs qi = foldl (flip insert) empty bs 
+fromList bs qi  
+  | length bs == 0 = emptyQTree (xl qi) (xr qi) (yb qi) (yt qi)
+  | otherwise = foldl (flip insert) empty bs 
     where empty = emptyQTree minNum maxNum minNum maxNum -- Dynamically calculate bounds of new Quadtree
           xl' = min (xl qi) (minimum $ map xCord bs)
           xr' = max (xr qi) (maximum $ map xCord bs)
@@ -75,6 +94,27 @@ fromList bs qi = foldl (flip insert) empty bs
 getInfo :: QuadTree -> QuadInfo
 getInfo (QuadTree _ _ _ _ qi) = qi
 getInfo (QuadNode _ qi) = qi
+
+fromListPar :: [Body] -> QuadInfo -> QuadTree
+fromListPar bs qi = (QuadTree nw' ne' sw' se' qi)
+    where (QuadTree nw ne sw se qi') = emptyQTree minNum maxNum minNum maxNum -- Dynamically calculate bounds of new Quadtree
+          xl' = min (xl qi) (minimum $ map xCord bs)
+          xr' = max (xr qi) (maximum $ map xCord bs)
+          yb' = min (yb qi) (minimum $ map yCord bs)
+          yt' = max (yt qi) (maximum $ map yCord bs)
+          minNum = min xl' yb' -- ensure we always have a square
+          maxNum = max xr' yt'
+          makeTreeForQuad = (\quad -> ((flip fromList) (getInfo quad) . filter (inQuad quad)) bs)
+          (nw', ne', sw', se') = runEval $ do 
+                                           nw' <- rparWith rdeepseq (makeTreeForQuad nw)
+                                           ne' <- rparWith rdeepseq (makeTreeForQuad ne)
+                                           sw' <- rparWith rdeepseq (makeTreeForQuad sw)
+                                           se' <- rparWith rdeepseq (makeTreeForQuad se)
+                                           rdeepseq nw'
+                                           rdeepseq ne'
+                                           rdeepseq sw'
+                                           rdeepseq se'
+                                           return (nw', ne', sw', se')
 
 emptyQNode :: Double -> Double -> Double -> Double -> QuadTree
 emptyQNode xl xr yb yt = QuadNode Nothing (QuadInfo xl xr yb yt (CenterMass 0 0 0))

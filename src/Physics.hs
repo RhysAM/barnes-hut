@@ -2,7 +2,7 @@ module Physics where
 import QuadTree
 
 thetaThreshold = 0.5
-g = 1000
+g = 10000
 
 defaultOrbiterRadius = 100
 
