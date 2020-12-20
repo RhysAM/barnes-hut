@@ -4,7 +4,7 @@ import re
 import json
 import time
 
-def run_sim(iterations, bodies, cores, strategy='DEFAULT', chunk_size = None):
+def run_sim(iterations, bodies, cores, strategy='default', chunk_size = None):
 
 	extra_args = ""
 	if strategy == "pm" or strategy == "pb":
@@ -23,10 +23,18 @@ def run_sim(iterations, bodies, cores, strategy='DEFAULT', chunk_size = None):
 
 	with open("times.txt") as f:
 		lines = f.readlines()
-		m = re.search('real\t0m([^s]*)', lines[1])
-		m2 = re.search('user\t0m([^s]*)', lines[2])
-		m3 = re.search('sys\t0m([^s]*)', lines[3])
-		return float(m.group(1)), float(m2.group(1)) + float(m3.group(1))
+		real = re.search('real\t([^s]*)', lines[1])
+		user = re.search('real\t([^s]*)', lines[2])
+		sys = re.search('real\t([^s]*)', lines[3])
+		return (parse_time(real.group(1)), parse_time(user) + parse_time(sys))
+
+def parse_time(time_string):
+	
+	split = time_str.split('m')
+	mins = split[0]
+	secs = split[1]
+
+	return float(mins) * 60 + secs
 
 def main():
 
@@ -40,11 +48,18 @@ def main():
 	cores = [2, 4, 6, 8]
 	chunks = [25 * i for i in range(1,21)]
 	results = {}
-	strategies = ['pm', 'pb', 'plc', 'pbc']
+	strategies = ["default", 'pm', 'pb', 'plc', 'pbc']
 
 	for strategy in strategies:
 
 		strategyResults = {}
+
+		if strategy == 'default':
+			run_time = run_sim(iterations, bodies, 1) # no parallel
+			clock_time = run_time[0]
+			strategyResults[strategy] = clock_time
+			continue
+
 		for core in cores:
 
 			coreResults = {}
