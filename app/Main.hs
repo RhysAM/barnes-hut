@@ -46,7 +46,9 @@ barnesHut oldTree dt = newTree --traceShow newTree newTree
         movedBodyList = map (doTimeStep dt) updatedBodyList
         newTree = calcCOM $ fromList movedBodyList (getInfo oldTree)
 
-au = (149.6 * (10^6) * 1000) :: Double
+makeTree :: Int -> QuadTree
+makeTree n = calcCOM $ insert b1' $ fromList [(\x -> generateOrbiter b1' (fromIntegral x) 10) (spacing + spacing * i) | i <- [0..(n-2)]] (getInfo empty)
+  where spacing = 1000
 
 simpleLoop :: Int -> (QuadTree -> Double -> QuadTree) -> QuadTree -> Double -> QuadTree
 simpleLoop n f tree dt
@@ -65,18 +67,18 @@ simpleLoop' n tree dt
 doUsage :: IO ()
 doUsage = do progName <- getProgName
              die $ "usage: " ++ progName ++
-                 " [-i <iterations> [pm|plc <chunk-size>|pb|pbc <chunk-size>]]"
+                 " [-i <iterations> -n <numBodies> [pm|plc <chunk-size>|pb|pbc <chunk-size>]]"
 
 main :: IO ()
 main = do 
     args <- getArgs
     case args of
       [] -> runSimulation smol barnesHut
-      ["-i", iters] -> (putStrLn . show) $ simpleLoop (read iters) barnesHut smol (0.5)
-      ["-i", iters, "pm"] -> (putStrLn . show) $ simpleLoop (read iters) barnesHutParMap smol (0.5)
-      ["-i", iters, "plc", cz] -> (putStrLn . show) $ calcCOM $ simpleLoop (read iters) (barnesHutParListChunks $ read cz) smol (0.5)
-      ["-i", iters, "pbc", cz] -> (putStrLn . show) $ simpleLoop (read iters) (barnesHutParBufChunks $ read cz) smol (0.5)
-      ["-i", iters, "pb"] -> (putStrLn . show) $ simpleLoop (read iters) barnesHutParBuffer smol (0.5)
+      ["-i", iters, "-n", numBodies] -> (putStrLn . show) $ simpleLoop (read iters) barnesHut (makeTree $ read numBodies) (0.5)
+      ["-i", iters, "-n", numBodies, "pm"] -> (putStrLn . show) $ simpleLoop (read iters) barnesHutParMap (makeTree $ read numBodies) (0.5)
+      ["-i", iters, "-n", numBodies, "plc", cz] -> (putStrLn . show) $ calcCOM $ simpleLoop (read iters) (barnesHutParListChunks $ read cz) (makeTree $ read numBodies) (0.5)
+      ["-i", iters, "-n", numBodies, "pbc", cz] -> (putStrLn . show) $ simpleLoop (read iters) (barnesHutParBufChunks $ read cz) (makeTree $ read numBodies) (0.5)
+      ["-i", iters, "-n", numBodies, "pb"] -> (putStrLn . show) $ simpleLoop (read iters) barnesHutParBuffer (makeTree $ read numBodies) (0.5)
       _ -> doUsage
 
 emptySmol = emptyQTree 0 200 0 200
