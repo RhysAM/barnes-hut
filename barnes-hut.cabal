@@ -1,8 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.2.
+-- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
+--
+-- hash: 05fd782c29231865723df6918d7b64593c81e7cd3ca5178ae13acf150c9aa1e9
 
 name:           barnes-hut
 version:        0.1.0.0

@@ -17,16 +17,18 @@ def run_sim(iterations, bodies, cores, strategy='default', chunk_size = None):
 
 		extra_args = "pbc {}".format(chunk_size)
 
-	command = "(time barnes-hut -i {} -n {} {} +RTS -N{}) 2> times.txt 1>times.txt".format(iterations, bodies, extra_args, cores)
+	command = "(time -p barnes-hut -i {} -n {} {} +RTS -N{}) > times.txt 2>&1".format(iterations, bodies, extra_args, cores)
 	print(command)
 	result = subprocess.run(command, shell=True)
+	# result = subprocess.Popen(['bash', '-p', command])
+    # os.system("bash")
 
 	with open("times.txt") as f:
 		lines = f.readlines()
-		real = re.search('real\t([^s]*)', lines[1])
-		user = re.search('user\t([^s]*)', lines[2])
-		sys = re.search('sys\t([^s]*)', lines[3])
-		return (parse_time(real.group(1)), parse_time(user.group(1)) + parse_time(sys.group(1)))
+		real = lines[-3].split(" ")[1]#re.search('real ([^]*)', lines[0])
+		user = lines[-2].split(" ")[1]#re.search('user ([^]*)', lines[1])
+		sys = lines[-1].split(" ")[1]#re.search('sys ([^]*)', lines[2])
+		return (float(real), float(user) + float(sys))
 
 def parse_time(time_string):
 	
@@ -38,7 +40,7 @@ def parse_time(time_string):
 
 def main():
 
-	iterations = 1
+	iterations = 500
 	bodies = 1000
 	print("Starting tests.")
 
