@@ -88,5 +88,47 @@ def main():
 
 		f.write(json.dumps(results))
 
+def other_test():
+
+	iterations = 500
+	body_count = [240, 480, 720, 960]
+	results = {}
+	strategies = ['default', 'plc', 'pbc']
+	cores = [2, 4, 6, 8]
+	for strategy in strategies:
+
+		strategyResults = {}
+
+		if strategy == 'default':
+
+			continue
+			for bodies in body_count:
+				run_time = run_sim(iterations, bodies, 1) # no parallel
+				clock_time = run_time[0]
+				strategyResults[strategy] = clock_time
+				results[strategy] = strategyResults
+				continue
+
+		for core in cores:
+
+			coreResults = {}
+
+			for bodies in body_count:
+
+				chunk_size = int(bodies / core)
+				run_time = run_sim(iterations, bodies, core, strategy=strategy, chunk_size=chunk_size)
+				clock_time = run_time[0]
+
+				coreResults[bodies] = clock_time
+
+			strategyResults[core] = coreResults
+
+		results[strategy] = strategyResults
+
+	timestr = time.strftime("%Y%m%d-%H-%M-%S")
+	with open('test_results_' + timestr + '.json', 'w') as f:
+
+		f.write(json.dumps(results))
+
 if __name__ == '__main__':
-    main()
+    other_test()
