@@ -24,21 +24,21 @@ def run_sim(iterations, bodies, cores, strategy='default', chunk_size = None):
 	with open("times.txt") as f:
 		lines = f.readlines()
 		real = re.search('real\t([^s]*)', lines[1])
-		user = re.search('real\t([^s]*)', lines[2])
-		sys = re.search('real\t([^s]*)', lines[3])
-		return (parse_time(real.group(1)), parse_time(user) + parse_time(sys))
+		user = re.search('user\t([^s]*)', lines[2])
+		sys = re.search('sys\t([^s]*)', lines[3])
+		return (parse_time(real.group(1)), parse_time(user.group(1)) + parse_time(sys.group(1)))
 
 def parse_time(time_string):
 	
-	split = time_str.split('m')
+	split = time_string.split('m')
 	mins = split[0]
 	secs = split[1]
 
-	return float(mins) * 60 + secs
+	return float(mins) * 60 + float(secs)
 
 def main():
 
-	iterations = 500
+	iterations = 1
 	bodies = 1000
 	print("Starting tests.")
 
