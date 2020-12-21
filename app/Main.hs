@@ -23,12 +23,12 @@ barnesHutParBufChunks :: Int -> QuadTree -> Double -> QuadTree
 barnesHutParBufChunks cz oldTree dt = newTree
   where oldbodyList = toList oldTree
         updatedBodyList = concat (map (map (\b -> doTimeStep dt $ approximateForce oldTree b dt)) (chunksOf cz oldbodyList) `using` parBuffer 100 rdeepseq)
-        newTree = calcCOM $ fromList updatedBodyList (getInfo oldTree)
+        newTree = calcCOM $ fromListPar updatedBodyList (getInfo oldTree)
 
 barnesHutParListChunks :: Int -> QuadTree -> Double -> QuadTree
 barnesHutParListChunks cz oldTree dt = newTree
   where oldbodyList = toList oldTree 
-        newTree = fromList (map (\b -> doTimeStep dt $ approximateForce oldTree b dt) oldbodyList `using` parListChunk cz rdeepseq) (getInfo oldTree)
+        newTree = fromListPar (map (\b -> doTimeStep dt $ approximateForce oldTree b dt) oldbodyList `using` parListChunk cz rdeepseq) (getInfo oldTree)
 
 barnesHutParBuffer :: QuadTree -> Double -> QuadTree
 barnesHutParBuffer oldTree dt = newTree
@@ -42,7 +42,7 @@ barnesHut oldTree dt = newTree
   where oldbodyList = toList oldTree
         updatedBodyList = map (\b -> approximateForce oldTree b dt) oldbodyList
         movedBodyList = map (doTimeStep dt) updatedBodyList
-        newTree = calcCOM $ fromList movedBodyList (getInfo oldTree)
+        newTree = calcCOM $ fromListPar movedBodyList (getInfo oldTree)
 
 makeBHSystem :: Int -> Int -> QuadTree
 makeBHSystem n spacing = calcCOM $ insert blackhole $ fromList orbiters (getInfo empty)
@@ -83,11 +83,20 @@ main = do
       ["-r", a, b, "-n", numBodies, "-m", maxMass] -> do radii <- randomlist (read a) (read b :: Double)
                                                          angles <- randomlist 0 (2 * pi :: Double)
                                                          masses <- randomlist 0 (read maxMass :: Double)
-                                                         runSimulation (makeBHSystemRandom (read numBodies) radii angles masses) barnesHut --(\qt _ -> qt)
-      ["-i", its, "-n", nb] -> print $ simpleLoop (read its) barnesHut (bhs (read nb)) 0.5
+                                                         runSimulation (makeBHSystemRandom (read numBodies) radii angles masses) (barnesHutParListChunks 50)--(\qt _ -> qt)
+      ["-i", its, "-n", nb] -> do radii <- randomlist (1000) (50000 :: Double)
+                                  angles <- randomlist 0 (2 * pi :: Double)
+                                  masses <- randomlist 0 (1000 :: Double)
+                                  print $ simpleLoop (read its) barnesHut (makeBHSystemRandom (read nb) radii angles masses) 0.5
       ["-i", its, "-n", nb, "pm"] -> print $ simpleLoop (read its) barnesHutParMap (bhs (read nb)) 0.5
-      ["-i", its, "-n", nb, "plc", cz] -> print $ calcCOM $ simpleLoop (read its) (barnesHutParListChunks $ read cz) (bhs (read nb)) 0.5
-      ["-i", its, "-n", nb, "pbc", cz] -> print $ simpleLoop (read its) (barnesHutParBufChunks $ read cz) (bhs (read nb)) 0.5
+      ["-i", its, "-n", nb, "plc", cz] -> do radii <- randomlist (1000) (50000 :: Double)
+                                             angles <- randomlist 0 (2 * pi :: Double)
+                                             masses <- randomlist 0 (1000 :: Double)
+                                             print $ simpleLoop (read its) (barnesHutParListChunks $ read cz) (makeBHSystemRandom (read nb) radii angles masses) 0.5
+      ["-i", its, "-n", nb, "pbc", cz] -> do radii <- randomlist (1000) (50000 :: Double)
+                                             angles <- randomlist 0 (2 * pi :: Double)
+                                             masses <- randomlist 0 (1000 :: Double)
+                                             print $ simpleLoop (read its) (barnesHutParBufChunks $ read cz) (makeBHSystemRandom (read nb) radii angles masses) 0.5
       ["-i", its, "-n", nb, "pb"] -> print $ simpleLoop (read its) barnesHutParBuffer (bhs (read nb)) 0.5
       _ -> doUsage
     where bhs nb' = makeBHSystem nb' 1000
