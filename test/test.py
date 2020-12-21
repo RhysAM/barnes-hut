@@ -50,7 +50,7 @@ def main():
 	cores = [2, 4, 6, 8]
 	chunks = [25 * i for i in range(1,21)]
 	results = {}
-	strategies = ["default"]
+	strategies = ["default", 'pm', 'pb', 'plc', 'pbc']
 
 	for strategy in strategies:
 
@@ -93,7 +93,7 @@ def other_test():
 	iterations = 500
 	body_count = [240, 480, 720, 960]
 	results = {}
-	strategies = ['default']
+	strategies = ["default", 'plc', 'pbc']
 	cores = [2, 4, 6, 8]
 	for strategy in strategies:
 

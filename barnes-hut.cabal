@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 05fd782c29231865723df6918d7b64593c81e7cd3ca5178ae13acf150c9aa1e9
+-- hash: bb3297d2ddb3cc937186c8baca1fa96c7b75d7c4dcc35970b12f6b6f4b162543
 
 name:           barnes-hut
 version:        0.1.0.0
@@ -39,6 +39,7 @@ library
     , deepseq
     , gloss
     , parallel
+    , random
     , split
   default-language: Haskell2010
 
@@ -55,6 +56,7 @@ executable barnes-hut
     , deepseq
     , gloss
     , parallel
+    , random
     , split
   default-language: Haskell2010
 
@@ -72,5 +74,6 @@ test-suite barnes-hut-test
     , deepseq
     , gloss
     , parallel
+    , random
     , split
   default-language: Haskell2010

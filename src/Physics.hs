@@ -2,13 +2,13 @@ module Physics where
 import QuadTree
 
 thetaThreshold :: Double
-thetaThreshold = 0.5
+thetaThreshold = 1
 
 g :: Double
-g = 10000
+g = 100
 
-defaultOrbiterRadius :: Double
-defaultOrbiterRadius = 100
+density :: Double
+density = 1/10 -- Object of mass 10 is radius 100, in mass / radius
 
 combineBodies :: Body -> Body -> Body
 combineBodies b1 b2 = b1 {mass = mass b1 + mass b2, xVel = xVel b1 + xVel b2, yVel = yVel b1 + yVel b2}
@@ -50,5 +50,14 @@ circularVelocity :: Double -> Double -> Double
 circularVelocity massSun radius' = sqrt (g * massSun / radius') 
 
 generateOrbiter :: Body -> Double -> Double -> Body
-generateOrbiter sun radius' mass' = Body mass' (xCord sun + radius') (yCord sun) (xVel sun) (yVel sun + velocity) defaultOrbiterRadius-- Start at same y level
+generateOrbiter sun radius' mass' = Body mass' (xCord sun + radius') (yCord sun) (xVel sun) (yVel sun + velocity) (mass' / density)-- Start at same y level
   where velocity = circularVelocity (mass sun) radius'
+
+generateOrbiterAngle :: Body -> Double -> Double -> Double -> Body
+generateOrbiterAngle sun radius' mass' angle = Body mass' (xPos) (yPos) (xVel') (yVel') (mass' / density)-- Start at same y level
+  where velocity = circularVelocity (mass sun) radius'
+        xVel' = xVel sun + velocity * sin (angle + pi / 2 :: Double) 
+        yVel' = yVel sun + velocity * cos (angle + pi / 2 :: Double)  
+        xPos = xCord sun + (sin angle) * radius'
+        yPos = xCord sun + (cos angle) * radius'
+

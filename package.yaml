@@ -25,6 +25,7 @@ dependencies:
 - parallel
 - deepseq
 - split
+- random
 
 library:
   source-dirs: src
