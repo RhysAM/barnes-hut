@@ -50,7 +50,7 @@ def main():
 	cores = [2, 4, 6, 8]
 	chunks = [25 * i for i in range(1,21)]
 	results = {}
-	strategies = ["default", 'pm', 'pb', 'plc', 'pbc']
+	strategies = ["default"]
 
 	for strategy in strategies:
 
@@ -93,7 +93,7 @@ def other_test():
 	iterations = 500
 	body_count = [240, 480, 720, 960]
 	results = {}
-	strategies = ['default', 'plc', 'pbc']
+	strategies = ['default']
 	cores = [2, 4, 6, 8]
 	for strategy in strategies:
 
@@ -104,7 +104,7 @@ def other_test():
 			for bodies in body_count:
 				run_time = run_sim(iterations, bodies, 1) # no parallel
 				clock_time = run_time[0]
-				strategyResults[strategy] = clock_time
+				strategyResults[body] = clock_time
 			
 			results[strategy] = strategyResults
 			continue
@@ -132,3 +132,4 @@ def other_test():
 
 if __name__ == '__main__':
     other_test()
+    main()
