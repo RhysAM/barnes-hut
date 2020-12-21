@@ -104,7 +104,7 @@ def other_test():
 			for bodies in body_count:
 				run_time = run_sim(iterations, bodies, 1) # no parallel
 				clock_time = run_time[0]
-				strategyResults[body] = clock_time
+				strategyResults[bodies] = clock_time
 			
 			results[strategy] = strategyResults
 			continue
