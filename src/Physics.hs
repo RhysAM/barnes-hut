@@ -1,9 +1,13 @@
 module Physics where
 import QuadTree
 
+thetaThreshold :: Double
 thetaThreshold = 0.5
+
+g :: Double
 g = 10000
 
+defaultOrbiterRadius :: Double
 defaultOrbiterRadius = 100
 
 combineBodies :: Body -> Body -> Body
@@ -19,16 +23,15 @@ calcCOM qt@(QuadTree _ _ _ _ qi) = QuadTree nw' ne' sw' se' (qi {com = CenterMas
           newY = foldr (\q wy -> wy + getCOMM q * getCOMY q) 0 qs / totMass
                       
 approximateForce :: QuadTree -> Body -> Double -> Body -- Run Barnes Hut
-approximateForce (QuadNode Nothing qi) b dt = b -- nothing to compute
-approximateForce (QuadNode (Just b1) qi) b dt = if b == b1 then b else updateVelocity b b1 dt
-approximateForce qt@(QuadTree nw ne sw se qi) b dt
+approximateForce (QuadNode Nothing _) b _ = b -- nothing to compute
+approximateForce (QuadNode (Just b1) _) b dt = if b == b1 then b else updateVelocity b b1 dt
+approximateForce qt@(QuadTree _ _ _ _ qi) b dt
   | theta < thetaThreshold  = updateVelocity b referenceMass dt-- Treat this quadrant as a single mass
-  | otherwise = foldQuads (\qt b -> approximateForce qt b dt) b qt
+  | otherwise = foldQuads (\qt' b' -> approximateForce qt' b' dt) b qt
   where (xDiff, yDiff) = (xCord b - getCOMX qt, yCord b - getCOMY qt)
         distance = xDiff * xDiff + yDiff * yDiff
         theta = (xr qi - xl qi) / sqrt distance
         referenceMass = Body (getCOMM qt) (getCOMX qt) (getCOMY qt) 0 0 0 -- Consider the COM a body for calculation
-        notIn = not $ inQuad qt b
 
 doTimeStep :: Double -> Body -> Body
 doTimeStep timeStep b = b {xCord = xCord b + xVel b * timeStep, yCord = yCord b + yVel b * timeStep}
@@ -44,8 +47,8 @@ updateVelocity bodyToUpdate otherBody dt
         yVelChange = g * sin angleToBody * (mass otherBody / distance)
 
 circularVelocity :: Double -> Double -> Double
-circularVelocity massSun radius = sqrt (g * massSun / radius) 
+circularVelocity massSun radius' = sqrt (g * massSun / radius') 
 
 generateOrbiter :: Body -> Double -> Double -> Body
-generateOrbiter sun radius mass' = Body mass' (xCord sun + radius) (yCord sun) (xVel sun) (yVel sun + velocity) defaultOrbiterRadius-- Start at same y level
-  where velocity = circularVelocity (mass sun) radius
+generateOrbiter sun radius' mass' = Body mass' (xCord sun + radius') (yCord sun) (xVel sun) (yVel sun + velocity) defaultOrbiterRadius-- Start at same y level
+  where velocity = circularVelocity (mass sun) radius'

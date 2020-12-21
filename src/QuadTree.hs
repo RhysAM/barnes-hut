@@ -1,7 +1,6 @@
 module QuadTree where
 import Control.DeepSeq
-import Data.List.Split(chunksOf)
-import Control.Parallel.Strategies(parList, rdeepseq, runEval, using, rparWith, rpar, parMap, rseq)
+import Control.Parallel.Strategies(rdeepseq, runEval, rparWith)
 
 data Body = Body {  mass :: Double
                  ,  xCord :: Double
@@ -41,18 +40,18 @@ data QuadInfo = QuadInfo {  xl :: Double
                          }
 
 instance NFData QuadInfo where
-    rnf (QuadInfo xl xr yb yt com) = rnf xl `deepseq`
-                                     rnf xr `deepseq`
-                                     rnf yb `deepseq`
-                                     rnf yt `deepseq`
-                                     rnf com 
+    rnf (QuadInfo xl' xr' yb' yt' com') = rnf xl' `deepseq`
+                                          rnf xr' `deepseq`
+                                          rnf yb' `deepseq`
+                                          rnf yt' `deepseq`
+                                          rnf com' 
                               
 
 instance Show QuadInfo where
     show (QuadInfo xxl xxr yyb yyt com') = "QI[ X:" ++ show xxl ++ "-" ++ show xxr ++ ", Y:" ++ show yyb ++ "-" ++ show yyt ++ ", "++ show com' ++ "]"
 
 instance Show Body where
-    show (Body m x y xVel yVel radius) = "body @ (" ++ show x ++ ", " ++ show y ++ ") -> mass: " ++ show m ++ ", vel: (" ++ show xVel ++ ", " ++ show yVel ++ ")" ++ ", radius: " ++ show radius
+    show (Body m x y xVel' yVel' radius') = "body @ (" ++ show x ++ ", " ++ show y ++ ") -> mass: " ++ show m ++ ", vel: (" ++ show xVel' ++ ", " ++ show yVel' ++ ")" ++ ", radius: " ++ show radius'
 
 data QuadTree = QuadTree QuadTree QuadTree QuadTree QuadTree QuadInfo
               | QuadNode (Maybe Body) QuadInfo
@@ -97,7 +96,7 @@ getInfo (QuadNode _ qi) = qi
 
 fromListPar :: [Body] -> QuadInfo -> QuadTree
 fromListPar bs qi = (QuadTree nw' ne' sw' se' qi)
-    where (QuadTree nw ne sw se qi') = emptyQTree minNum maxNum minNum maxNum -- Dynamically calculate bounds of new Quadtree
+    where (QuadTree nw ne sw se _) = emptyQTree minNum maxNum minNum maxNum -- Dynamically calculate bounds of new Quadtree
           xl' = min (xl qi) (minimum $ map xCord bs)
           xr' = max (xr qi) (maximum $ map xCord bs)
           yb' = min (yb qi) (minimum $ map yCord bs)
@@ -106,35 +105,31 @@ fromListPar bs qi = (QuadTree nw' ne' sw' se' qi)
           maxNum = max xr' yt'
           makeTreeForQuad = (\quad -> ((flip fromList) (getInfo quad) . filter (inQuad quad)) bs)
           (nw', ne', sw', se') = runEval $ do 
-                                           nw' <- rparWith rdeepseq (makeTreeForQuad nw)
-                                           ne' <- rparWith rdeepseq (makeTreeForQuad ne)
-                                           sw' <- rparWith rdeepseq (makeTreeForQuad sw)
-                                           se' <- rparWith rdeepseq (makeTreeForQuad se)
-                                           rdeepseq nw'
-                                           rdeepseq ne'
-                                           rdeepseq sw'
-                                           rdeepseq se'
-                                           return (nw', ne', sw', se')
+                                           parNW <- rparWith rdeepseq (makeTreeForQuad nw)
+                                           parNE <- rparWith rdeepseq (makeTreeForQuad ne)
+                                           parSW <- rparWith rdeepseq (makeTreeForQuad sw)
+                                           parSE <- rparWith rdeepseq (makeTreeForQuad se)
+                                           return (parNW, parNE, parSW, parSE)
 
 emptyQNode :: Double -> Double -> Double -> Double -> QuadTree
-emptyQNode xl xr yb yt = QuadNode Nothing (QuadInfo xl xr yb yt (CenterMass 0 0 0))
+emptyQNode xl' xr' yb' yt' = QuadNode Nothing (QuadInfo xl' xr' yb' yt' (CenterMass 0 0 0))
 
 emptyQTree :: Double -> Double -> Double -> Double -> QuadTree
-emptyQTree xl xr yb yt = QuadTree nw ne sw se (QuadInfo xl xr yb yt (CenterMass 0 0 0))
-                        where xm = (xr + xl) / 2
-                              ym = (yt + yb) / 2
-                              nw = emptyQNode xl xm ym yt
-                              ne = emptyQNode xm xr ym yt
-                              sw = emptyQNode xl xm yb ym
-                              se = emptyQNode xm xr yb ym
+emptyQTree xl' xr' yb' yt' = QuadTree nw ne sw se (QuadInfo xl' xr' yb' yt' (CenterMass 0 0 0))
+                        where xm = (xr' + xl') / 2
+                              ym = (yt' + yb') / 2
+                              nw = emptyQNode xl' xm ym yt'
+                              ne = emptyQNode xm xr' ym yt'
+                              sw = emptyQNode xl' xm yb' ym
+                              se = emptyQNode xm xr' yb' ym
 
 mapQuads :: (QuadTree -> a) -> QuadTree -> [a]
-mapQuads f qn@(QuadNode b qi) = [f qn]
-mapQuads f qt@(QuadTree nw ne sw se qi) = [f nw, f ne, f sw, f se]
+mapQuads f qn@(QuadNode _ _) = [f qn]
+mapQuads f (QuadTree nw ne sw se _) = [f nw, f ne, f sw, f se]
 
 foldQuads :: (QuadTree -> a -> a) -> a -> QuadTree -> a
 foldQuads f z qn@(QuadNode _ _) = f qn z
-foldQuads f z qt@(QuadTree nw ne sw se _) = foldQuads f (foldQuads f (foldQuads f (foldQuads f z se) sw) ne) nw
+foldQuads f z (QuadTree nw ne sw se _) = foldQuads f (foldQuads f (foldQuads f (foldQuads f z se) sw) ne) nw
 
 inQuad :: QuadTree -> Body -> Bool
 inQuad qt b = xl qi <= x && xr qi >= x && yt qi >= y && yb qi <= y
@@ -158,8 +153,8 @@ insert b (QuadTree nw ne sw se qi)
   | otherwise = error "Couldn't find QuadTree to insert body"
 
 traversePrint :: QuadTree -> Int -> String
-traversePrint n@(QuadNode b qi) lvl = "\\_ " ++ show n
-traversePrint qt@(QuadTree nw ne sw se qi) lvl = concat $ prInfo : branches 
+traversePrint n@(QuadNode _ _) _ = "\\_ " ++ show n
+traversePrint qt@(QuadTree _ _ _ _ qi) lvl = concat $ prInfo : branches 
     where branches = mapQuads (\q -> "\n" ++ replicate lvl '-' ++ traversePrint q (lvl + 1)) qt
           prInfo = (if lvl /= 0 then "\\_ " else "") ++ show qi
 
