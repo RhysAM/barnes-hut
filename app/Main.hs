@@ -20,13 +20,13 @@ barnesHutParMap oldTree dt = newTree --traceShow newTree newTree
 barnesHutParBufChunks :: Int -> QuadTree -> Double -> QuadTree
 barnesHutParBufChunks cz oldTree dt = newTree --traceShow newTree newTree
   where oldbodyList = toList oldTree
-        updatedBodyList = concat (map (\bs -> map (\b -> doTimeStep dt $ approximateForce oldTree b dt) bs) (chunksOf cz oldbodyList) `using` parBuffer 100 rdeepseq)
+        updatedBodyList = concat (map (map (\b -> doTimeStep dt $ approximateForce oldTree b dt)) (chunksOf cz oldbodyList) `using` parBuffer 100 rdeepseq)
         -- movedBodyList = map (doTimeStep dt) updatedBodyList --`using` parListChunk nChunks rdeepseq
         newTree = calcCOM $ fromList updatedBodyList (getInfo oldTree)
 
 barnesHutParListChunks :: Int -> QuadTree -> Double -> QuadTree
 barnesHutParListChunks cz oldTree dt = newTree
-  where oldbodyList = toList (oldTree) 
+  where oldbodyList = toList oldTree 
         newTree = fromList (map (\b -> doTimeStep dt $ approximateForce oldTree b dt) oldbodyList `using` parListChunk cz rdeepseq) (getInfo oldTree)
         -- newTree = calcCOM $ fromList updatedBodyList (getInfo oldTree)
 
@@ -51,7 +51,7 @@ makeBHSystem n spacing = calcCOM $ insert blackhole $ fromList [(\x -> generateO
 simpleLoop :: Int -> (QuadTree -> Double -> QuadTree) -> QuadTree -> Double -> QuadTree
 simpleLoop n f tree dt
   | n > 0 = simpleLoop (n - 1) f (f (calcCOM tree) dt) dt
-  | otherwise = calcCOM $ tree
+  | otherwise = calcCOM tree
 
 simpleLoop' :: Int -> QuadTree -> Double -> Eval QuadTree
 simpleLoop' n tree dt
@@ -72,9 +72,9 @@ main = do
     args <- getArgs
     case args of
       [] -> runSimulation (makeBHSystem 150 1000)  barnesHut
-      ["-i", iters, "-n", numBodies] -> (putStrLn . show) $ simpleLoop (read iters) barnesHut (makeBHSystem (read numBodies) 1000) (0.5)
-      ["-i", iters, "-n", numBodies, "pm"] -> (putStrLn . show) $ simpleLoop (read iters) barnesHutParMap (makeBHSystem (read numBodies) 1000) (0.5)
-      ["-i", iters, "-n", numBodies, "plc", cz] -> (putStrLn . show) $ calcCOM $ simpleLoop (read iters) (barnesHutParListChunks $ read cz) (makeBHSystem (read numBodies) 1000) (0.5)
-      ["-i", iters, "-n", numBodies, "pbc", cz] -> (putStrLn . show) $ simpleLoop (read iters) (barnesHutParBufChunks $ read cz) (makeBHSystem (read numBodies) 1000) (0.5)
-      ["-i", iters, "-n", numBodies, "pb"] -> (putStrLn . show) $ simpleLoop (read iters) barnesHutParBuffer (makeBHSystem (read numBodies) 1000) (0.5)
+      ["-i", iters, "-n", numBodies] -> print $ simpleLoop (read iters) barnesHut (makeBHSystem (read numBodies) 1000) 0.5
+      ["-i", iters, "-n", numBodies, "pm"] -> print $ simpleLoop (read iters) barnesHutParMap (makeBHSystem (read numBodies) 1000) 0.5
+      ["-i", iters, "-n", numBodies, "plc", cz] -> print $ calcCOM $ simpleLoop (read iters) (barnesHutParListChunks $ read cz) (makeBHSystem (read numBodies) 1000) 0.5
+      ["-i", iters, "-n", numBodies, "pbc", cz] -> print $ simpleLoop (read iters) (barnesHutParBufChunks $ read cz) (makeBHSystem (read numBodies) 1000) 0.5
+      ["-i", iters, "-n", numBodies, "pb"] -> print $ simpleLoop (read iters) barnesHutParBuffer (makeBHSystem (read numBodies) 1000) 0.5
       _ -> doUsage

@@ -59,7 +59,7 @@ data QuadTree = QuadTree QuadTree QuadTree QuadTree QuadTree QuadInfo
 instance NFData QuadTree where
     rnf (QuadTree nw ne sw se qi) = rnf nw `deepseq` rnf ne `deepseq` rnf sw `deepseq` rnf se `deepseq` rnf qi
     rnf (QuadNode (Just b) qi) = rnf b `deepseq` rnf qi
-    rnf (QuadNode (Nothing) qi) = rnf qi
+    rnf (QuadNode Nothing qi) = rnf qi
 
 getCOMX :: QuadTree -> Double
 getCOMX (QuadTree _ _ _ _ qi) = cx . com $ qi
@@ -78,32 +78,32 @@ toList (QuadNode Nothing _) = []
 toList (QuadNode (Just b) _) = [b]
 toList (QuadTree nw ne sw se _) = toList nw ++ toList ne ++ toList sw ++ toList se
 
-fromList :: [Body] -> QuadInfo -> QuadTree
-fromList bs qi  
-  | length bs == 0 = emptyQTree (xl qi) (xr qi) (yb qi) (yt qi)
-  | otherwise = foldl (flip insert) empty bs 
-    where empty = emptyQTree minNum maxNum minNum maxNum -- Dynamically calculate bounds of new Quadtree
-          xl' = min (xl qi) (minimum $ map xCord bs)
+squareBounds :: QuadInfo -> [Body] -> (Double, Double)
+squareBounds qi bs = (minNum, maxNum)
+    where xl' = min (xl qi) (minimum $ map xCord bs)
           xr' = max (xr qi) (maximum $ map xCord bs)
           yb' = min (yb qi) (minimum $ map yCord bs)
           yt' = max (yt qi) (maximum $ map yCord bs)
           minNum = min xl' yb' -- ensure we always have a square
           maxNum = max xr' yt'
+
+
+fromList :: [Body] -> QuadInfo -> QuadTree
+fromList bs qi  
+  | null bs = emptyQTree (xl qi) (xr qi) (yb qi) (yt qi)
+  | otherwise = foldl (flip insert) empty bs 
+    where empty = emptyQTree minNum maxNum minNum maxNum -- Dynamically calculate bounds of new Quadtree
+          (minNum, maxNum) = squareBounds qi bs
 
 getInfo :: QuadTree -> QuadInfo
 getInfo (QuadTree _ _ _ _ qi) = qi
 getInfo (QuadNode _ qi) = qi
 
 fromListPar :: [Body] -> QuadInfo -> QuadTree
-fromListPar bs qi = (QuadTree nw' ne' sw' se' qi)
+fromListPar bs qi = QuadTree nw' ne' sw' se' qi
     where (QuadTree nw ne sw se _) = emptyQTree minNum maxNum minNum maxNum -- Dynamically calculate bounds of new Quadtree
-          xl' = min (xl qi) (minimum $ map xCord bs)
-          xr' = max (xr qi) (maximum $ map xCord bs)
-          yb' = min (yb qi) (minimum $ map yCord bs)
-          yt' = max (yt qi) (maximum $ map yCord bs)
-          minNum = min xl' yb' -- ensure we always have a square
-          maxNum = max xr' yt'
-          makeTreeForQuad = (\quad -> ((flip fromList) (getInfo quad) . filter (inQuad quad)) bs)
+          (minNum, maxNum) = squareBounds qi bs 
+          makeTreeForQuad quad = (flip fromList (getInfo quad) . filter (inQuad quad)) bs
           (nw', ne', sw', se') = runEval $ do 
                                            parNW <- rparWith rdeepseq (makeTreeForQuad nw)
                                            parNE <- rparWith rdeepseq (makeTreeForQuad ne)
