@@ -28,7 +28,7 @@ barnesHutParBufChunks cz oldTree dt = newTree
 barnesHutParListChunks :: Int -> QuadTree -> Double -> QuadTree
 barnesHutParListChunks cz oldTree dt = newTree
   where oldbodyList = toList oldTree 
-        newTree = fromList (map (\b -> doTimeStep dt $ approximateForce oldTree b dt) oldbodyList `using` parListChunk cz rdeepseq) (getInfo oldTree)
+        newTree = fromListPar (map (\b -> doTimeStep dt $ approximateForce oldTree b dt) oldbodyList `using` parListChunk cz rdeepseq) (getInfo oldTree)
 
 barnesHutParBuffer :: QuadTree -> Double -> QuadTree
 barnesHutParBuffer oldTree dt = newTree
