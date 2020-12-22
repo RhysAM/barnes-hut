@@ -15,7 +15,7 @@ drawQuadTree (QuadNode (Just b) qi) pics = drawBox qi : drawBody b : pics
 drawQuadTree qt@(QuadTree _ _ _ _ qi) pics = drawBox qi : foldQuads drawQuadTree pics qt ++ pics
 
 drawBox :: QuadInfo -> Picture
-drawBox qi = Color green $ Translate x y (rectangleWire (realToFrac (xr qi - xl qi)) (realToFrac (yt qi - yb qi)))
+drawBox qi = Color (greyN 0.5) $ Translate x y (rectangleWire (realToFrac (xr qi - xl qi)) (realToFrac (yt qi - yb qi)))
   where x = realToFrac (xr qi + xl qi) / 2
         y = realToFrac (yt qi + yb qi) / 2 
 

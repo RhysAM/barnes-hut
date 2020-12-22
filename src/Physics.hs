@@ -5,7 +5,7 @@ thetaThreshold :: Double
 thetaThreshold = 1
 
 g :: Double
-g = 100
+g = 50
 
 density :: Double
 density = 1/10 -- Object of mass 10 is radius 100, in mass / radius

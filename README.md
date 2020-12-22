@@ -1,7 +1,9 @@
 barnes-hut
 ==========
 A parallelized Haskell implementation of the Barnes-Hut algorithm, used to
-approximate n-body simulations.
+approximate `n`-body simulations.
+
+![demo](barnes-hut-demo.gif)
 
 Getting Started
 ---------------
