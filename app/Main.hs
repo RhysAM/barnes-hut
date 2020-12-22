@@ -81,9 +81,9 @@ main = do
     case args of
       [] -> runSimulation (makeBHSystem 150 1000) barnesHut -- Graphic Demo
       ["-r", minRadius, maxRadius, "-n", numBodies, "-m", maxMass] -> do radii <- randomlist (read minRadius) (read maxRadius :: Double)
-                                                         angles <- randomlist 0 (2 * pi :: Double)
-                                                         masses <- randomlist 0 (read maxMass :: Double)
-                                                         runSimulation (makeBHSystemRandom (read numBodies) radii angles masses) (barnesHutParListChunks ((read numBodies) `div` 4))--(\qt _ -> qt)
+                                                                         angles <- randomlist 0 (2 * pi :: Double)
+                                                                         masses <- randomlist 0 (read maxMass :: Double)
+                                                                         runSimulation (makeBHSystemRandom (read numBodies) radii angles masses) (barnesHutParListChunks ((read numBodies) `div` 4))--(\qt _ -> qt)
       ["-i", its, "-n", nb] -> do radii <- randomlist (1000) (50000 :: Double)
                                   angles <- randomlist 0 (2 * pi :: Double)
                                   masses <- randomlist 0 (1000 :: Double)
