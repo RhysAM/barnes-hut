@@ -28,7 +28,7 @@ barnesHutParBufChunks cz oldTree dt = newTree
 barnesHutParListChunks :: Int -> QuadTree -> Double -> QuadTree
 barnesHutParListChunks cz oldTree dt = newTree
   where oldbodyList = toList oldTree 
-        newTree = fromListPar (map (\b -> doTimeStep dt $ approximateForce oldTree b dt) oldbodyList `using` parListChunk cz rdeepseq) (getInfo oldTree)
+        newTree = fromList (map (\b -> doTimeStep dt $ approximateForce oldTree b dt) oldbodyList `using` parListChunk cz rdeepseq) (getInfo oldTree)
 
 barnesHutParBuffer :: QuadTree -> Double -> QuadTree
 barnesHutParBuffer oldTree dt = newTree
@@ -70,7 +70,7 @@ simpleLoop' n tree dt
 doUsage :: IO ()
 doUsage = do progName <- getProgName
              die $ "usage: " ++ progName ++
-                 "[-i <iterations> -n <numBodies> [pm|plc <chunk-size>|pb|pbc <chunk-size>]]"
+                 "[-r <minRadius> <maxRadius> -n <numBodies> -m <maxMass> | -i <iterations> -n <numBodies> [pm|plc <chunk-size>|pb|pbc <chunk-size>]]"
 
 randomlist :: Random a => a -> a -> IO [a]
 randomlist a b = fmap (randomRs (a,b)) newStdGen
@@ -80,10 +80,10 @@ main = do
     args <- getArgs
     case args of
       [] -> runSimulation (makeBHSystem 150 1000) barnesHut -- Graphic Demo
-      ["-r", a, b, "-n", numBodies, "-m", maxMass] -> do radii <- randomlist (read a) (read b :: Double)
+      ["-r", minRadius, maxRadius, "-n", numBodies, "-m", maxMass] -> do radii <- randomlist (read minRadius) (read maxRadius :: Double)
                                                          angles <- randomlist 0 (2 * pi :: Double)
                                                          masses <- randomlist 0 (read maxMass :: Double)
-                                                         runSimulation (makeBHSystemRandom (read numBodies) radii angles masses) (barnesHutParListChunks 50)--(\qt _ -> qt)
+                                                         runSimulation (makeBHSystemRandom (read numBodies) radii angles masses) (barnesHutParListChunks ((read numBodies) `div` 4))--(\qt _ -> qt)
       ["-i", its, "-n", nb] -> do radii <- randomlist (1000) (50000 :: Double)
                                   angles <- randomlist 0 (2 * pi :: Double)
                                   masses <- randomlist 0 (1000 :: Double)
