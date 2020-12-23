@@ -79,7 +79,6 @@ main :: IO ()
 main = do 
     args <- getArgs
     case args of
-      [] -> runSimulation (makeBHSystem 150 1000) barnesHut -- Graphic Demo
       ["-r", minRadius, maxRadius, "-n", numBodies, "-m", maxMass] -> do radii <- randomlist (read minRadius) (read maxRadius :: Double)
                                                                          angles <- randomlist 0 (2 * pi :: Double)
                                                                          masses <- randomlist 0 (read maxMass :: Double)
