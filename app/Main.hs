@@ -70,7 +70,7 @@ simpleLoop' n tree dt
 doUsage :: IO ()
 doUsage = do progName <- getProgName
              die $ "usage: " ++ progName ++
-                 "[-r <minRadius> <maxRadius> -n <numBodies> -m <maxMass> | -i <iterations> -n <numBodies> [pm|plc <chunk-size>|pb|pbc <chunk-size>]]"
+                 " [-r <min-radius> <max-radius> -n <num-bodies> -m <max-mass> |\n\t\t-i <iterations> -n <numBodies> [pm|plc <chunk-size>|pb|pbc <chunk-size>]]"
 
 randomlist :: Random a => a -> a -> IO [a]
 randomlist a b = fmap (randomRs (a,b)) newStdGen
@@ -82,17 +82,17 @@ main = do
       ["-r", minRadius, maxRadius, "-n", numBodies, "-m", maxMass] -> do radii <- randomlist (read minRadius) (read maxRadius :: Double)
                                                                          angles <- randomlist 0 (2 * pi :: Double)
                                                                          masses <- randomlist 0 (read maxMass :: Double)
-                                                                         runSimulation (makeBHSystemRandom (read numBodies) radii angles masses) (barnesHutParListChunks ((read numBodies) `div` 4))--(\qt _ -> qt)
-      ["-i", its, "-n", nb] -> do radii <- randomlist (1000) (50000 :: Double)
+                                                                         runSimulation (makeBHSystemRandom (read numBodies) radii angles masses) (barnesHutParListChunks (read numBodies `div` 4))
+      ["-i", its, "-n", nb] -> do radii <- randomlist 1000 (50000 :: Double)
                                   angles <- randomlist 0 (2 * pi :: Double)
                                   masses <- randomlist 0 (1000 :: Double)
                                   print $ simpleLoop (read its) barnesHut (makeBHSystemRandom (read nb) radii angles masses) 0.5
       ["-i", its, "-n", nb, "pm"] -> print $ simpleLoop (read its) barnesHutParMap (bhs (read nb)) 0.5
-      ["-i", its, "-n", nb, "plc", cz] -> do radii <- randomlist (1000) (50000 :: Double)
+      ["-i", its, "-n", nb, "plc", cz] -> do radii <- randomlist 1000 (50000 :: Double)
                                              angles <- randomlist 0 (2 * pi :: Double)
                                              masses <- randomlist 0 (1000 :: Double)
                                              print $ simpleLoop (read its) (barnesHutParListChunks $ read cz) (makeBHSystemRandom (read nb) radii angles masses) 0.5
-      ["-i", its, "-n", nb, "pbc", cz] -> do radii <- randomlist (1000) (50000 :: Double)
+      ["-i", its, "-n", nb, "pbc", cz] -> do radii <- randomlist 1000 (50000 :: Double)
                                              angles <- randomlist 0 (2 * pi :: Double)
                                              masses <- randomlist 0 (1000 :: Double)
                                              print $ simpleLoop (read its) (barnesHutParBufChunks $ read cz) (makeBHSystemRandom (read nb) radii angles masses) 0.5

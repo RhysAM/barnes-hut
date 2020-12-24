@@ -10,7 +10,14 @@ Getting Started
 Requires `stack`.
 
 ```
-make run
+stack install
+```
+
+Assuming you have `~/.local/bin` in your path,
+```
+$ barnes-hut -h
+usage: barnes-hut [-r <min-radius> <max-radius> -n <num-bodies> -m <max-mass> |
+                   -i <iterations> -n <numBodies> [pm|plc <chunk-size>|pb|pbc <chunk-size>]]
 ```
 
 Background
